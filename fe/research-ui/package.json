@@ -2,7 +2,12 @@
   "name": "@research-ui/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "start": "nx run research-ui:serve",
+    "build": "nx run research-ui:build",
+    "build-docker": "nx run research-ui:container",
+    "storybook": "nx run research-ui:storybook"
+  },
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -11,6 +16,7 @@
     "@mui/icons-material": "5.14.16",
     "@mui/material": "^5.14.17",
     "@swc/helpers": "~0.5.2",
+    "axios": "1.6.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-router-dom": "6.11.2",
@@ -19,6 +25,8 @@
   "devDependencies": {
     "@babel/core": "^7.14.5",
     "@babel/preset-react": "^7.14.5",
+    "@nx-tools/container-metadata": "5.1.0",
+    "@nx-tools/nx-container": "5.1.0",
     "@nx/cypress": "17.1.1",
     "@nx/eslint": "17.1.1",
     "@nx/eslint-plugin": "17.1.1",
@@ -37,6 +45,7 @@
     "@storybook/core-server": "^7.5.3",
     "@storybook/jest": "^0.2.3",
     "@storybook/react-vite": "^7.5.3",
+    "@storybook/react-webpack5": "7.5.3",
     "@storybook/test-runner": "^0.13.0",
     "@storybook/testing-library": "^0.2.2",
     "@svgr/webpack": "^8.0.1",
