@@ -1,9 +1,6 @@
-﻿using info.sarins.services.vault.Data;
-using info.sarins.services.vault.Data.Services;
+﻿using info.sarins.services.vault.Data.Services;
 using info.sarins.services.vault.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace info.sarins.services.vault.Controllers
@@ -21,7 +18,7 @@ namespace info.sarins.services.vault.Controllers
             this.casefiles = casefiles;
         }
 
-        [HttpGet(Name = "GetAllCases")]
+        [HttpGet]
         [SwaggerOperation(Summary = "Get all case files",
             Description = "Requires admin privileges",
             OperationId = "GetAllCases",
@@ -30,6 +27,16 @@ namespace info.sarins.services.vault.Controllers
         public async Task<IActionResult> GetActive()
         {
             return Ok(await casefiles.GetCaseFilesAsync());
+        }
+
+        [HttpGet("{identifier}")]
+        [SwaggerOperation(Summary = "Get all case files",
+            Description = "Requires admin privileges",
+            OperationId = "GetAllCases",
+            Tags = new[] { "Case Files" })]
+        public async Task<IActionResult> GetCase([FromRoute] long identifier)
+        {
+            return Ok(await casefiles.GetCaseFileAsync(identifier));
         }
 
         [HttpPost]
@@ -66,7 +73,16 @@ namespace info.sarins.services.vault.Controllers
             return Ok(await casefiles.ArchiveCaseFile(identifier));
 
         }
-
-
+        [HttpDelete("{identifier}")]
+        [SwaggerOperation(Summary = "Archive case files",
+           Description = "Requires admin privileges",
+           OperationId = "ArchiveCase",
+           Tags = new[] { "Case Files" }
+           )]
+        public async Task<IActionResult> Delete([FromRoute]int identifier)
+        {
+            await casefiles.DeleteCaseFileAsync(identifier);
+            return Ok();
+        }
     }
 }

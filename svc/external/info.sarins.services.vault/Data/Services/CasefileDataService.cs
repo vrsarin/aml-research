@@ -9,9 +9,12 @@ namespace info.sarins.services.vault.Data.Services
     {
         Task<CaseFile> AddNewCaseFile(CaseFile caseFile);
         Task<List<CaseFile>> GetCaseFilesAsync();
+
+        Task<CaseFile> GetCaseFileAsync(long identifier);
         Task<CaseFile> UpdateCaseFile(long identifier, CaseFile caseFile);
 
         Task<CaseFile> ArchiveCaseFile(long identifier);
+        Task DeleteCaseFileAsync(int identifier);
     }
 
     public class CasefileDataService : ICasefileDataService
@@ -64,6 +67,19 @@ namespace info.sarins.services.vault.Data.Services
             dbFile.CaseFile = JsonSerializer.Serialize(caseFile);
             await context.SaveChangesAsync();
             return caseFile;
+        }
+
+        public async Task<CaseFile> GetCaseFileAsync(long identifier)
+        {
+            var dbFile = await context.CaseFiles.Where(f => f.Id.Equals(identifier)).FirstAsync();
+            return JsonSerializer.Deserialize<CaseFile>(dbFile.CaseFile);
+        }
+
+        public async Task DeleteCaseFileAsync(int identifier)
+        {
+            var dbFile = await context.CaseFiles.Where(f => f.Id.Equals(identifier)).FirstAsync();
+            context.CaseFiles.Remove(dbFile);
+            await context.SaveChangesAsync();
         }
     }
 }
