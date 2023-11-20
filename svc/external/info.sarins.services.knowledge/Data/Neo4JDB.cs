@@ -29,8 +29,7 @@ namespace info.sarins.services.knowledge.Data
             using var session = this.driver.AsyncSession();
             var labels = await session.ExecuteReadAsync(async tx =>
             {
-                var result = await tx.RunAsync(@"use dev
-CALL apoc.meta.data()
+                var result = await tx.RunAsync(@"CALL apoc.meta.data()
 YIELD label, other, elementType, type
 WHERE elementType = ""node""
 RETURN COLLECT(distinct label) as labels");
@@ -64,8 +63,7 @@ RETURN COLLECT(distinct label) as labels");
             using var session = this.driver.AsyncSession();
             var labels = await session.ExecuteReadAsync(async tx =>
             {
-                var query = $@"use dev
-MATCH (n:{label}) RETURN n as entities";
+                var query = $@"MATCH (n:{label}) RETURN n as entities";
                 var result = await tx.RunAsync(query);
 
                 return await result.ToListAsync();
@@ -80,8 +78,7 @@ MATCH (n:{label}) RETURN n as entities";
             using var session = this.driver.AsyncSession();
             var labels = await session.ExecuteReadAsync(async tx =>
             {
-                var query = $@"use dev
-MATCH (n) RETURN n as entities";
+                var query = $@"MATCH (n) RETURN n as entities";
                 var result = await tx.RunAsync(query);
 
                 return await result.ToListAsync();
