@@ -89,11 +89,11 @@ export function DataTabs(props: TabsProps) {
         <Tab label="Report" {...a11yProps(2)} />
       </Tabs>
 
-      <CustomTabPanel value={value} index={0}>
-        <GeneralTab identifier={props.identifier} />
+      <CustomTabPanel value={value} index={1}>
+        <GeneralTab identifier={props.identifier ?? ''} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
-        <Nodes identifier={props.identifier} />
+        {/* <Nodes identifier={props.identifier??''} /> */}
       </CustomTabPanel>
     </Stack>
   );

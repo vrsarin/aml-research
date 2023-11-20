@@ -14,6 +14,7 @@ import {
 import axios from 'axios';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import FileOpenIcon from '@mui/icons-material/FileOpen';
+import { useNavigate } from 'react-router-dom';
 
 const client = axios.create({
   baseURL: 'http://localhost:8081/case-files',
@@ -22,6 +23,8 @@ const client = axios.create({
 export interface CaseFileGridProps {}
 
 export function CaseFileGrid(props: CaseFileGridProps) {
+
+  const navigate=useNavigate()
   const initialState: CaseFileModel[] = [];
 
   const [caseData, setCaseData] = useState(initialState);
@@ -43,13 +46,14 @@ export function CaseFileGrid(props: CaseFileGridProps) {
     getCaseFiles();
   }
 
-  function handleOpenFile(event: any): void {
-    throw new Error('Function not implemented.');
-  }
+  
 
   function RenderCards(value: CaseFileModel): any {
     function handleArchiveVisibility(): boolean {
       return value.caseStatus.toLowerCase() === 'archived';
+    }
+    function handleOpenFile(event: any): void {
+      navigate(`/vault?id=${value.identifier}`)
     }
     return (
       <Box padding={1}>

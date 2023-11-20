@@ -3,17 +3,14 @@ import { Container, Divider } from '@mui/material';
 
 import CategoryList from './category_list/CategoryList';
 import EntityTypes from './entity-types/EntityTypes';
+import { EntityModel } from '../../models/Entity.Model';
 
-const entities = [
-  { name: 'Gautam Adani', designation: 'CEO', company: 'Adani Group' },
-  {
-    name: 'Priti Adani',
-    designation: 'Chairperson',
-    company: 'Adani Foundation',
-  },
-];
+export interface NodedProperties {
+  identifier:string
+  entities: EntityModel[] | undefined;
+}
 
-export function Nodes() {
+export function Nodes(props: NodedProperties) {
   const [category, setCategory] = useState('Person');
   const [categories, setCategories] = useState([
     'Person',
@@ -50,7 +47,7 @@ export function Nodes() {
         categoryDeleted={deleteHandler}
       />
       <Divider />
-      <CategoryList Category={category} Data={entities} />
+      <CategoryList Category={category} Data={props.entities} />
     </Container>
   );
 }
