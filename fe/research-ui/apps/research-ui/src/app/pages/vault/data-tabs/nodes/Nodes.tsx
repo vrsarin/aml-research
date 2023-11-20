@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useState, MouseEvent } from 'react';
 import { Container, Divider } from '@mui/material';
 
 import CategoryList from './category_list/CategoryList';
 import EntityTypes from './entity-types/EntityTypes';
-import { EntityModel } from '../../models/Entity.Model';
+import { EntityModel } from 'apps/research-ui/src/app/models/Entity.Model';
 
 export interface NodedProperties {
-  identifier:string
+  identifier: string;
   entities: EntityModel[] | undefined;
 }
 
@@ -20,10 +20,11 @@ export function Nodes(props: NodedProperties) {
     'Company',
   ]);
 
-  const handler = (event: any) => {
-    setCategory(event.target.innerText);
+  const handler = (event: MouseEvent<HTMLDivElement>) => {
+    setCategory(event.currentTarget.innerText);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const deleteHandler = (event: any) => {
     const filteredCategories = categories.filter(
       (c) => c !== event.currentTarget.parentNode.innerText
@@ -34,7 +35,7 @@ export function Nodes(props: NodedProperties) {
     setCategories(filteredCategories);
   };
 
-  if (categories.filter((c) => c === category).length == 0) {
+  if (categories.filter((c) => c === category).length === 0) {
     setCategory(categories[0]);
   }
 

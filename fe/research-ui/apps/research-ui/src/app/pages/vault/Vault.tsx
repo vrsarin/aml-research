@@ -8,13 +8,14 @@ import {
   Tabs,
   Tab,
 } from '@mui/material';
-import Nodes from '../nodes/Nodes';
+
 import { useLocation, useNavigate } from 'react-router-dom';
 import GeneralTab from './data-tabs/general-tab/GeneralTab';
 import { MouseEvent, SyntheticEvent, useEffect, useState } from 'react';
 import MenuIcon from '@mui/icons-material/Menu';
 import axios from 'axios';
 import { EntityModel } from '../../models/Entity.Model';
+import Nodes from './data-tabs/nodes/Nodes';
 
 
 const client = axios.create({
@@ -67,7 +68,7 @@ export function Vault() {
   const [entities, setEntities] = useState(initialState);
   useEffect(() => {
     getCaseFile(id);
-  }, []);
+  }, [id]);
 
   function getCaseFile(id: string): void {
     client.get('').then((response) => {
