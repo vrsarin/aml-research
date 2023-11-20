@@ -1,13 +1,9 @@
-import { Component } from 'react';
-
-import { Box } from '@mui/material';
+import DataTabs from './data-tabs/DataTabs';
 
 export interface VaultProps {}
 
-export class Vault extends Component<VaultProps> {
-  override render() {
-    return <Box>This is Vault!</Box>;
-  }
+export function Vault(props: VaultProps) {
+  return <DataTabs identifier={''}></DataTabs>;
 }
 
 export default Vault;

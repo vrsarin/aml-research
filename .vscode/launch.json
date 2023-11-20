@@ -1,0 +1,90 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "AML-Research",
+      "request": "launch",
+      "type": "msedge",
+      "url": "http://localhost:4200",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "compose-up-dev",
+      "serverReadyAction": {
+        "action": "debugWithEdge",
+        "pattern": "listening on port ([0-9]+)",
+        "uriFormat": "http://localhost:%s",
+        "killOnServerStop": true
+      }
+    },
+    {
+      "name": "Launch Graph",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/svc/external/info.sarins.services.knowledge/bin/Debug/net7.0/info.sarins.services.knowledge.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/svc/external/info.sarins.services.knowledge",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      }
+    },
+    {
+      "name": ".NET Core Attach",
+      "type": "coreclr",
+      "request": "attach"
+    },
+    {
+      "name": "Launch Vault",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/svc/external/info.sarins.services.vault/bin/Debug/net7.0/info.sarins.services.vault.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/svc/external/info.sarins.services.vault",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      }
+    },
+    {
+      "name": "Docker .NET Launch",
+      "type": "docker",
+      "request": "launch",
+      "preLaunchTask": "docker-run: debug",
+      "netCore": {
+        "appProject": "${workspaceFolder}/svc/external/info.sarins.services.vault/info.sarins.services.vault.csproj"
+      }
+    },
+    {
+      "name": "Docker Node.js Launch",
+      "type": "docker",
+      "request": "launch",
+      "preLaunchTask": "docker-run: debug",
+      "platform": "node",
+      "node": {
+        "package": "${workspaceFolder}/fe/research-ui/package.json",
+        "localRoot": "${workspaceFolder}/fe/research-ui"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Run All",
+      "configurations": ["Launch Graph", "Launch Vault"]
+    }
+  ]
+}
