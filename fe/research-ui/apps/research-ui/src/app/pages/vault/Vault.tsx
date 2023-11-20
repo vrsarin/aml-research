@@ -119,7 +119,7 @@ export function Vault() {
         <GeneralTab identifier={id} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
-        <Nodes entities={entities} />
+        <Nodes entities={entities} identifier={id} />
       </CustomTabPanel>
     </Stack>
   );

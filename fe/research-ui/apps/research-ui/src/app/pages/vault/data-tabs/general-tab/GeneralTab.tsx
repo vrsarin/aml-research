@@ -4,7 +4,7 @@ import {
   Divider,
   TextField,
 } from '@mui/material';
-import { CaseFileModel } from 'apps/research-ui/src/app/models/CaseFile.Model';
+import { CaseFileModel, CaseStatus } from 'apps/research-ui/src/app/models/CaseFile.Model';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
@@ -76,7 +76,7 @@ const VisuallyHiddenInput = styled('input')({
 export function GeneralTab(props: GeneralTabProps) {
   const initialState: CaseFileModel = {
     identifier: 0,
-    caseStatus: '',
+    caseStatus: CaseStatus.Open,
     name: '',
     description: '',
   };

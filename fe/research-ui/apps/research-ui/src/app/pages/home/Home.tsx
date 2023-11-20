@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Divider, IconButton, Stack } from '@mui/material';
 import CasefileList from './case-file-list/CasefileList';
 import ViewListIcon from '@mui/icons-material/ViewList';
@@ -6,9 +6,21 @@ import GridViewIcon from '@mui/icons-material/GridView';
 import CreateNewFolderIcon from '@mui/icons-material/CreateNewFolder';
 import CaseFileGrid from './case-file-grid/CaseFileGrid';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import CreateCaseFile from './create-case-file/CreateCaseFile';
+import axios from 'axios';
+import { CaseFileModel } from '../../models/CaseFile.Model';
+import { ActionTypes } from '../../models/Action-Types.Enum';
+
+const client = axios.create({
+  baseURL: 'http://localhost:8081/case-files',
+});
 
 export function Home() {
+  const initialState: CaseFileModel[] = [];
+
+  const [folders, setFolders] = useState(initialState);
   const [value, setValue] = useState('Grid');
+  const [open, setOpen] = useState(false);
 
   function handleChange(event: any): void {
     const actualElement = event.currentTarget as HTMLButtonElement;
@@ -20,7 +32,44 @@ export function Home() {
   }
 
   function handleCreateCase(event: any): void {
-    throw new Error('Function not implemented.');
+    setOpen(true);
+  }
+
+  function handleClose(refresh: boolean): void {
+    setOpen(false);
+    if (refresh === true) {
+      getFolders();
+    }
+  }
+
+  useEffect(() => {
+    getFolders();
+  }, []);
+
+  function getFolders(): void {
+    client
+      .get('')
+      .then((response) => {
+        setFolders(response.data);
+      })
+      .catch((response) => alert(response));
+  }
+
+  function archiveFolder(identifier: string): void {
+    const url = `archive?identifier=${identifier}`;
+    client.put(url, {}).then((response) => {});
+  }
+
+  function handleAction(actionType: ActionTypes, identifier: string): void {
+    switch (actionType) {
+      case ActionTypes.ArchiveFolder:
+        archiveFolder(identifier);
+        break;
+
+      default:
+        break;
+    }
+    getFolders();
   }
 
   return (
@@ -65,8 +114,13 @@ export function Home() {
         </Stack>
       </Box>
       <Box marginTop={4}>
-        {value === 'List' ? <CasefileList /> : <CaseFileGrid />}
+        {value === 'List' ? (
+          <CasefileList />
+        ) : (
+          <CaseFileGrid folders={folders} handleAction={handleAction} />
+        )}
       </Box>
+      <CreateCaseFile open={open} handleClose={handleClose}></CreateCaseFile>
     </Box>
   );
 }

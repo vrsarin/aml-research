@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { CaseFileModel } from '../CaseFile.Model';
+import { MouseEvent } from 'react';
 import {
   Avatar,
   Box,
@@ -11,50 +10,31 @@ import {
   IconButton,
   Stack,
 } from '@mui/material';
-import axios from 'axios';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import FileOpenIcon from '@mui/icons-material/FileOpen';
 import { useNavigate } from 'react-router-dom';
+import { CaseFileModel, CaseStatus } from '../../../models/CaseFile.Model';
+import { ActionTypes } from '../../../models/Action-Types.Enum';
 
-const client = axios.create({
-  baseURL: 'http://localhost:8081/case-files',
-});
-
-export interface CaseFileGridProps {}
+export interface CaseFileGridProps {
+  folders: CaseFileModel[];
+  handleAction(actionType: ActionTypes, identifier: string): void;
+}
 
 export function CaseFileGrid(props: CaseFileGridProps) {
-
-  const navigate=useNavigate()
-  const initialState: CaseFileModel[] = [];
-
-  const [caseData, setCaseData] = useState(initialState);
-
-  useEffect(() => {
-    getCaseFiles();
-  }, []);
-
-  function getCaseFiles(): void {
-    client.get('').then((response) => {
-      const files = response.data;
-      setCaseData(files);
-    });
-  }
-
-  function handleArchive(event: any): void {
-    const url = `archive?identifier=${event.currentTarget.id}`;
-    client.put(url, {}).then((response) => {});
-    getCaseFiles();
-  }
-
-  
+  const navigate = useNavigate();
 
   function RenderCards(value: CaseFileModel): any {
     function handleArchiveVisibility(): boolean {
-      return value.caseStatus.toLowerCase() === 'archived';
+      return value.caseStatus === CaseStatus.Archived;
     }
     function handleOpenFile(event: any): void {
-      navigate(`/vault?id=${value.identifier}`)
+      navigate(`/vault?id=${value.identifier}`);
     }
+    function handleArchive(event: MouseEvent<HTMLButtonElement>): void {
+      props.handleAction(ActionTypes.ArchiveFolder, event.currentTarget.id);
+    }
+
     return (
       <Box padding={1}>
         <Card>
@@ -90,7 +70,7 @@ export function CaseFileGrid(props: CaseFileGridProps) {
         useFlexGap
         flexWrap="wrap"
       >
-        {caseData.map((r: CaseFileModel) => RenderCards(r))}
+        {props.folders.map((r: CaseFileModel) => RenderCards(r))}
       </Stack>
     </Container>
   );
