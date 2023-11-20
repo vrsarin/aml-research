@@ -1,4 +1,5 @@
 
+using info.sarins.services.knowledge.Data;
 using System.Text.Json.Serialization;
 
 namespace info.sarins.services.knowledge
@@ -28,6 +29,8 @@ namespace info.sarins.services.knowledge
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c => { c.EnableAnnotations(); });
+            builder.Services.AddTransient<INeo4JDB, Neo4JDB>();
+
             var app = builder.Build();
             app.UseCors("CorsPolicy");
             //TODO: Get it from environment variables

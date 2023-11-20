@@ -1,0 +1,45 @@
+# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP.NET Core service.
+
+version: "3.4"
+
+services:
+  researchui:
+    image: researchui
+    build:
+      context: fe/research-ui
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: development
+    ports:
+      - 3000:3000
+      - 9229:9229
+    command: ["node", "--inspect=0.0.0.0:9229", "index.js"]
+  graphservice:
+    image: graph
+    build:
+      context: ./svc/external
+      dockerfile: info.sarins.services.knowledge/Dockerfile
+      args:
+        - configuration=Debug
+    ports:
+      - 8082:80
+      - 8444:443
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ~/.vsdbg:/remote_debugger:rw
+
+  vaultservice:
+    image: vault
+    build:
+      context: ./svc/external
+      dockerfile: info.sarins.services.vault/Dockerfile
+      args:
+        - configuration=Debug
+    ports:
+      - 8081:80
+      - 8443:443
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ~/.vsdbg:/remote_debugger:rw
