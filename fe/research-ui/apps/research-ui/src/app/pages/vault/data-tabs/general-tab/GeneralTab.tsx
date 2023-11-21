@@ -3,10 +3,8 @@ import axios from 'axios';
 import {
   Box,
   Button,
-  CircularProgress,
   Divider,
   LinearProgress,
-  Paper,
   TextField,
   Typography,
 } from '@mui/material';
@@ -19,7 +17,6 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import AddLinkIcon from '@mui/icons-material/AddLink';
 import AddNote from './actions/add-notes/AddNote';
-import { green } from '@mui/material/colors';
 
 const client = axios.create({
   baseURL: 'http://host.docker.internal:8081/case-files',
@@ -94,7 +91,7 @@ export function GeneralTab(props: GeneralTabProps) {
             .catch((response) => alert('Inner Loop ' + response));
         })
         .catch((response) => {
-          alert(response);          
+          alert(response);
         });
     });
   }
@@ -141,7 +138,7 @@ export function GeneralTab(props: GeneralTabProps) {
         open={addNote}
         handleClose={handleAddNodeClose}
       ></AddNote>
-      <Box sx={{ width: '100%'}} display={showProgress}>
+      <Box sx={{ width: '100%' }} display={showProgress}>
         <LinearProgress />
       </Box>
       <Divider />
