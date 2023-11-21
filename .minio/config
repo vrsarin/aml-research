@@ -1,0 +1,33 @@
+# MINIO_ROOT_USER and MINIO_ROOT_PASSWORD sets the root account for the MinIO server.
+# This user has unrestricted permissions to perform S3 and administrative API operations on any resource in the deployment.
+# Omit to use the default values 'minioadmin:minioadmin'.
+# MinIO recommends setting non-default values as a best practice, regardless of environment
+
+MINIO_ROOT_USER=admin
+MINIO_ROOT_PASSWORD=P@ssw0rd
+
+# MINIO_VOLUMES sets the storage volume or path to use for the MinIO server.
+
+MINIO_VOLUMES="/mnt/data"
+
+# MINIO_SERVER_URL sets the hostname of the local machine for use with the MinIO Server
+# MinIO assumes your network control plane can correctly resolve this hostname to the local machine
+
+# Uncomment the following line and replace the value with the correct hostname for the local machine and port for the MinIO server (9000 by default).
+
+# MINIO_SERVER_URL="http://host.docker.internal:9000"
+# Kafka Queue settings
+# MINIO_NOTIFY_KAFKA_ENABLE_PRIMARY='on'
+# MINIO_NOTIFY_KAFKA_BROKERS_PRIMARY="host.docker.internal:29092"
+# MINIO_NOTIFY_KAFKA_TOPIC_PRIMARY='documents'
+# MINIO_NOTIFY_WEBHOOK_QUEUE_DIR_PRIMARY=/home/events
+
+# Postgres Eventing
+# MINIO_NOTIFY_POSTGRES_ENABLE_PRIMARY="on"
+# MINIO_NOTIFY_POSTGRES_CONNECTION_STRING_PRIMARY="host=host.docker.internal port=5432 dbname=amlvaultdb user=amluser password=P@ssw0rd"
+# MINIO_NOTIFY_POSTGRES_TABLE_PRIMARY="minioevents"
+# MINIO_NOTIFY_POSTGRES_FORMAT_PRIMARY="namespace|access"
+# MINIO_NOTIFY_POSTGRES_MAX_OPEN_CONNECTIONS_PRIMARY="2"
+# MINIO_NOTIFY_POSTGRES_QUEUE_DIR_PRIMARY="/opt/minio/events"
+# MINIO_NOTIFY_POSTGRES_QUEUE_LIMIT_PRIMARY="100000"
+# MINIO_NOTIFY_POSTGRES_COMMENT_PRIMARY="PostgreSQL Notification Event Logging for MinIO" -->
