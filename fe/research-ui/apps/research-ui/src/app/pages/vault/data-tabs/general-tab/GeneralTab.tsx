@@ -1,14 +1,25 @@
-import { Box, Button, Divider, TextField } from '@mui/material';
+import { useEffect, useState, MouseEvent, SyntheticEvent } from 'react';
+import axios from 'axios';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Divider,
+  LinearProgress,
+  Paper,
+  TextField,
+  Typography,
+} from '@mui/material';
 import {
   CaseFileModel,
   CaseStatus,
 } from 'apps/research-ui/src/app/models/CaseFile.Model';
-import axios from 'axios';
-import { useEffect, useState } from 'react';
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import AddLinkIcon from '@mui/icons-material/AddLink';
+import AddNote from './actions/add-notes/AddNote';
+import { green } from '@mui/material/colors';
 
 const client = axios.create({
   baseURL: 'http://host.docker.internal:8081/case-files',
@@ -36,16 +47,18 @@ export function GeneralTab(props: GeneralTabProps) {
     description: '',
   };
   const [caseFile, setCaseFile] = useState(initialState);
+  const [addNote, setAddNote] = useState(false);
+  const [showProgress, setProgress] = useState('none');
 
   useEffect(() => {
     if (props.identifier) {
-      getCaseFile();
+      getCaseFile(props.identifier);
     }
   }, [props.identifier]);
 
-  function getCaseFile(): void {
+  function getCaseFile(id: string): void {
     client
-      .get(`${props.identifier}`)
+      .get(id)
       .then((response) => {
         const file = response.data;
         setCaseFile(file);
@@ -55,14 +68,41 @@ export function GeneralTab(props: GeneralTabProps) {
       });
   }
 
+  function handleAddNodeClose(refresh: boolean): void {
+    setAddNote(false);
+  }
+
+  function handleAddNoteOpen(event: MouseEvent<HTMLLabelElement>): void {
+    setAddNote(true);
+  }
+
+  function handleFileSelected(event: SyntheticEvent<HTMLInputElement>): void {
+    const files = Array.from(event.currentTarget.files ?? []);
+    files.map((file) => {
+      setProgress('');
+      client
+        .get(`${props.identifier}/content/upload-url?filename=${file.name}`)
+        .then((response) => {
+          client
+            .put(response.data, file, {
+              headers: {
+                'Content-Type': file.type,
+                'Content-Encoding': file.length,
+              },
+            })
+            .then((response) => setProgress('none'))
+            .catch((response) => alert('Inner Loop ' + response));
+        })
+        .catch((response) => {
+          alert(response);          
+        });
+    });
+  }
+
   return (
     <Box paddingBottom={0.5}>
-      <Box width={1} padding={1}>
-        <TextField
-          label="Case Identifier"
-          value={caseFile.identifier}
-          disabled
-        />
+      <Box padding={2}>
+        <Typography>Case File: {caseFile.identifier}</Typography>
       </Box>
       <Box padding={1}>
         <TextField
@@ -70,7 +110,6 @@ export function GeneralTab(props: GeneralTabProps) {
           value={caseFile.name}
           sx={{ minWidth: '200px;' }}
           fullWidth
-          disabled
         />
       </Box>
       <Box padding={1}>
@@ -78,20 +117,32 @@ export function GeneralTab(props: GeneralTabProps) {
           label="Short Description"
           value={caseFile.description}
           fullWidth
-          disabled
         />
       </Box>
       <Box>
-        <Button component="label" startIcon={<NoteAddIcon />}>
+        <Button
+          component="label"
+          startIcon={<NoteAddIcon />}
+          onClick={handleAddNoteOpen}
+        >
           Add New Note
         </Button>
+
         <Button component="label" startIcon={<AddLinkIcon />}>
           Add Web Link
         </Button>
         <Button component="label" startIcon={<CloudUploadIcon />}>
           Upload file
-          <VisuallyHiddenInput type="file" />
+          <VisuallyHiddenInput type="file" onChange={handleFileSelected} />
         </Button>
+      </Box>
+      <AddNote
+        identifier={props.identifier}
+        open={addNote}
+        handleClose={handleAddNodeClose}
+      ></AddNote>
+      <Box sx={{ width: '100%'}} display={showProgress}>
+        <LinearProgress />
       </Box>
       <Divider />
     </Box>

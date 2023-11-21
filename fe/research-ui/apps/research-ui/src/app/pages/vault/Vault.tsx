@@ -17,7 +17,6 @@ import axios from 'axios';
 import { EntityModel } from '../../models/Entity.Model';
 import Nodes from './data-tabs/nodes/Nodes';
 
-
 const client = axios.create({
   baseURL: 'http://localhost:8081/case-files',
 });
@@ -71,10 +70,13 @@ export function Vault() {
   }, [id]);
 
   function getCaseFile(id: string): void {
-    client.get('').then((response) => {
-      const files = response.data;
-      setEntities(files);
-    });
+    client
+      .get(id)
+      .then((response) => {
+        const files = response.data;
+        setEntities(files);
+      })
+      .catch((response) => alert(response));
   }
 
   const handleChange = (event: SyntheticEvent, newValue: number) => {

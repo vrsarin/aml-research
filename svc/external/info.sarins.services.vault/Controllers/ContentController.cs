@@ -1,5 +1,4 @@
 ﻿using info.sarins.services.vault.Data.Services;
-using info.sarins.services.vault.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace info.sarins.services.vault.Controllers
@@ -34,6 +33,5 @@ namespace info.sarins.services.vault.Controllers
             var caseFile = await casefiles.GetCaseFileAsync(identifier);
             return Ok(await storageRespository.GetFileUrl(caseFile.Identifier, fileName));
         }
-
     }
 }
