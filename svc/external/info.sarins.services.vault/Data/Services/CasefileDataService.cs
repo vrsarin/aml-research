@@ -7,23 +7,27 @@ namespace info.sarins.services.vault.Data.Services
 {
     public interface ICasefileDataService
     {
-        Task<CaseFile> AddNewCaseFile(CaseFile caseFile);
+        Task AddNewCaseFile(CaseFile caseFile);
         Task<List<CaseFile>> GetCaseFilesAsync();
 
-        Task<CaseFile> GetCaseFileAsync(long identifier);
-        Task<CaseFile> UpdateCaseFile(long identifier, CaseFile caseFile);
+        Task<CaseFile> GetCaseFileAsync(string identifier);
+        Task<CaseFile> UpdateCaseFile(string identifier, CaseFile caseFile);
 
-        Task<CaseFile> ArchiveCaseFile(long identifier);
-        Task DeleteCaseFileAsync(int identifier);
+        Task<CaseFile> ArchiveCaseFile(string identifier);
+        Task DeleteCaseFileAsync(string identifier);
     }
 
     public class CasefileDataService : ICasefileDataService
     {
+        private readonly ILogger<CasefileDataService> logger;
         private readonly VaultDBContext context;
+        private readonly IStorageRespository storageRespository;
 
-        public CasefileDataService(VaultDBContext dBContext)
+        public CasefileDataService(ILogger<CasefileDataService> logger, VaultDBContext dBContext, IStorageRespository storageRespository)
         {
+            this.logger = logger;
             this.context = dBContext;
+            this.storageRespository = storageRespository;
         }
         public async Task<List<CaseFile>> GetCaseFilesAsync()
         {
@@ -37,21 +41,22 @@ namespace info.sarins.services.vault.Data.Services
             return caseFiles;
         }
 
-        public async Task<CaseFile> AddNewCaseFile(CaseFile caseFile)
+        public async Task AddNewCaseFile(CaseFile caseFile)
         {
             CaseFiles dbFile = new()
             {
+                Id=caseFile.Identifier,
                 DisplayName = caseFile.Name,
                 CaseFile = JsonSerializer.Serialize(caseFile)
             };
+            
+            await storageRespository.CreateBucketAsync(dbFile.Id);
             await context.CaseFiles.AddAsync(dbFile);
             await context.SaveChangesAsync();
-            caseFile.Identifier = dbFile.Id;
-            await UpdateCaseFile(dbFile.Id, caseFile);
-            return caseFile;
+          
         }
 
-        public async Task<CaseFile> UpdateCaseFile(long identifier, CaseFile caseFile)
+        public async Task<CaseFile> UpdateCaseFile(string identifier, CaseFile caseFile)
         {
             var dbFile = await context.CaseFiles.Where(f => f.Id.Equals(identifier)).FirstAsync();
             dbFile.CaseFile = JsonSerializer.Serialize(caseFile);
@@ -59,7 +64,7 @@ namespace info.sarins.services.vault.Data.Services
             return caseFile;
         }
 
-        public async Task<CaseFile> ArchiveCaseFile(long identifier)
+        public async Task<CaseFile> ArchiveCaseFile(string identifier)
         {
             var dbFile = await context.CaseFiles.Where(f => f.Id.Equals(identifier)).FirstAsync();
             CaseFile caseFile = JsonSerializer.Deserialize<CaseFile>(dbFile.CaseFile);
@@ -69,13 +74,13 @@ namespace info.sarins.services.vault.Data.Services
             return caseFile;
         }
 
-        public async Task<CaseFile> GetCaseFileAsync(long identifier)
+        public async Task<CaseFile> GetCaseFileAsync(string identifier)
         {
             var dbFile = await context.CaseFiles.Where(f => f.Id.Equals(identifier)).FirstAsync();
             return JsonSerializer.Deserialize<CaseFile>(dbFile.CaseFile);
         }
 
-        public async Task DeleteCaseFileAsync(int identifier)
+        public async Task DeleteCaseFileAsync(string identifier)
         {
             var dbFile = await context.CaseFiles.Where(f => f.Id.Equals(identifier)).FirstAsync();
             context.CaseFiles.Remove(dbFile);

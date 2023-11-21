@@ -11,8 +11,8 @@ using info.sarins.services.vault.Data;
 namespace info.sarins.services.vault.Migrations
 {
     [DbContext(typeof(VaultDBContext))]
-    [Migration("20231114023706_v0.0.1")]
-    partial class v001
+    [Migration("20231121003931_v1")]
+    partial class v1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,11 +26,8 @@ namespace info.sarins.services.vault.Migrations
 
             modelBuilder.Entity("info.sarins.services.vault.Data.Models.CaseFiles", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<string>("CaseFile")
                         .IsRequired()

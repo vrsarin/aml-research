@@ -4,8 +4,8 @@ namespace info.sarins.services.vault.Models
 {
     public class CaseFile
     {
-        
-        public long Identifier { get; set; }
+
+        public string Identifier { get; set; } = Guid.NewGuid().ToString();
 
         [Required]
         public required string Name { get; set; }
@@ -14,17 +14,14 @@ namespace info.sarins.services.vault.Models
 
         public Status CaseStatus { get; set; } = Status.Open;
 
-        public Dictionary<string,Uri> CaseUrls { get; set; }= new Dictionary<string,Uri>();
+        public Content[]? Contents { get; set; }
 
-        public Dictionary<string, Uri> Documents { get; set; } = new Dictionary<string, Uri>();
-
-        public Dictionary<string, string> Notes { get; set; } = new Dictionary<string, string>();
     }
 
-    
+
     public enum Status
     {
-        Open,     
+        Open,
         DataGathering,
         Analyzing,
         ReportGeneration,

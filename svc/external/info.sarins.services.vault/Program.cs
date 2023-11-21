@@ -1,6 +1,7 @@
 
 using info.sarins.services.vault.Data;
 using info.sarins.services.vault.Data.Services;
+using Minio;
 using System.Text.Json.Serialization;
 
 namespace info.sarins.services.vault
@@ -10,6 +11,16 @@ namespace info.sarins.services.vault
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            var config = builder.Configuration;
+
+            builder.Services.AddMinio(o => o
+                .WithEndpoint(config.GetValue<string>("minio:host"))
+                .WithCredentials(config.GetValue<string>("minio:accessKey"),
+                        config.GetValue<string>("minio:secretKey"))
+                .WithSSL(false)
+                    , ServiceLifetime.Singleton);
+
             builder.Services.AddCors(op =>
             {
                 op.AddPolicy("CorsPolicy", policy =>
@@ -31,6 +42,7 @@ namespace info.sarins.services.vault
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c => { c.EnableAnnotations(); });
             builder.Services.AddTransient<ICasefileDataService, CasefileDataService>();
+            builder.Services.AddTransient<IStorageRespository, StorageRespository>();
 
 
             var app = builder.Build();

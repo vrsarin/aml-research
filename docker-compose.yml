@@ -7,10 +7,10 @@ services:
   #   image: researchuisource
   #   build:
   #     context: ./fe/research-ui
-  #     dockerfile: Dockerfile    
+  #     dockerfile: Dockerfile
   #   ports:
   #     - 4200:4200
-    
+
   graphservice:
     container_name: "graph"
     image: graph
@@ -61,17 +61,34 @@ services:
     volumes:
       - ./.neo4j/data:/data
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider localhost:7474 || exit 1"]
-    
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider localhost:7474 || exit 1",
+        ]
+
   postgreservice:
     container_name: postgresql
     image: postgres
     ports:
-    - 5432:5432
+      - 5432:5432
     environment:
       - POSTGRES_DB=amlvaultdb
       - POSTGRES_USER=amluser
       - POSTGRES_PASSWORD=P@ssw0rd
     volumes:
-      - ./.postgres/data:/var/lib/postgresql/data
+      - ./.postgres/data:/var/lib/postgresql/
+
+  minioservice:
+    container_name: minio
+    image: quay.io/minio/minio
+    command: ["minio", "server", "--console-address", ":9090"]
+    ports:
+      - 9000:9000
+      - 9090:9090
+    environment:
+      - MINIO_CONFIG_ENV_FILE=/etc/config.env
+    volumes:
+      - ./.minio/config:/etc/config.env
+      - ./.minio/data:/data/minio
   

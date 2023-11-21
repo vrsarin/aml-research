@@ -19,5 +19,7 @@ namespace info.sarins.services.vault.Data
 
         public DbSet<CaseFiles> CaseFiles { get; set; }
 
+      
+
     }
 }

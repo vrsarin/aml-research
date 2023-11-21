@@ -4,3 +4,4 @@
 **/obj
 **/.neo4j
 **/.postgres
+/.minio

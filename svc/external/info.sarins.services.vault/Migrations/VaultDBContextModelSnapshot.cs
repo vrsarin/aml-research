@@ -23,11 +23,8 @@ namespace info.sarins.services.vault.Migrations
 
             modelBuilder.Entity("info.sarins.services.vault.Data.Models.CaseFiles", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<string>("CaseFile")
                         .IsRequired()

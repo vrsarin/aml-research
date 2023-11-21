@@ -34,7 +34,7 @@ namespace info.sarins.services.vault.Controllers
             Description = "Requires admin privileges",
             OperationId = "GetAllCases",
             Tags = new[] { "Case Files" })]
-        public async Task<IActionResult> GetCase([FromRoute] long identifier)
+        public async Task<IActionResult> GetCase([FromRoute] string identifier)
         {
             return Ok(await casefiles.GetCaseFileAsync(identifier));
         }
@@ -47,7 +47,9 @@ namespace info.sarins.services.vault.Controllers
             )]
         public async Task<IActionResult> Add(CaseFile caseFile)
         {
-            return Ok(await casefiles.AddNewCaseFile(caseFile));
+            
+            await casefiles.AddNewCaseFile(caseFile);
+            return Ok();
         }
 
         [HttpPut]
@@ -56,7 +58,7 @@ namespace info.sarins.services.vault.Controllers
             OperationId = "UpdateCases",
             Tags = new[] { "Case Files" }
             )]
-        public async Task<IActionResult> Update(int identifier, CaseFile caseFile)
+        public async Task<IActionResult> Update(string identifier, CaseFile caseFile)
         {
             return Ok(await casefiles.UpdateCaseFile(identifier, caseFile));
 
@@ -68,7 +70,7 @@ namespace info.sarins.services.vault.Controllers
             OperationId = "ArchiveCase",
             Tags = new[] { "Case Files" }
             )]
-        public async Task<IActionResult> Archive(int identifier)
+        public async Task<IActionResult> Archive(string identifier)
         {
             return Ok(await casefiles.ArchiveCaseFile(identifier));
 
@@ -79,7 +81,7 @@ namespace info.sarins.services.vault.Controllers
            OperationId = "ArchiveCase",
            Tags = new[] { "Case Files" }
            )]
-        public async Task<IActionResult> Delete([FromRoute]int identifier)
+        public async Task<IActionResult> Delete([FromRoute]string identifier)
         {
             await casefiles.DeleteCaseFileAsync(identifier);
             return Ok();

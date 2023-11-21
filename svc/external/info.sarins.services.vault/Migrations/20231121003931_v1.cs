@@ -1,12 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace info.sarins.services.vault.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class v1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,10 +14,10 @@ namespace info.sarins.services.vault.Migrations
                 name: "CaseFiles",
                 columns: table => new
                 {
-                    Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    DisplayName = table.Column<string>(type: "text", nullable: false),
-                    CaseFile = table.Column<string>(type: "text", nullable: true)
+                    Id = table.Column<string>(type: "text", nullable: false),
+                    DisplayName = table.Column<string>(type: "text", nullable: true),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    CaseFile = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
