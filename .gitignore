@@ -6,3 +6,4 @@
 **/.postgres
 **/.minio/data
 **/.venv
+**/__pycache__

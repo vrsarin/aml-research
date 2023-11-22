@@ -15,26 +15,25 @@ services:
     container_name: "graph"
     image: graph
     build:
-      context: ./svc/external
-      dockerfile: info.sarins.services.knowledge/Dockerfile
+      context: ./svc
+      dockerfile: external/info.sarins.services.knowledge/Dockerfile
     depends_on:
       - ne04jservice
 
     ports:
-      - 8082:80
-      - 8444:443
+      - 8082:80      
 
   vaultservice:
     container_name: "vault"
     image: vault
     build:
-      context: ./svc/external
-      dockerfile: info.sarins.services.vault/Dockerfile
+      context: ./svc
+      dockerfile: external/info.sarins.services.vault/Dockerfile
     depends_on:
       - postgreservice
     ports:
       - 8081:80
-      - 8443:443
+      
 
   keycloakservice:
     container_name: "keycloak"
@@ -90,12 +89,12 @@ services:
       - MINIO_CONFIG_ENV_FILE=/etc/config.env
     volumes:
       - ./.minio/config:/etc/config.env
-      - ./.minio/data:/data/minio
+      - ./.minio/data:/mnt/data
     depends_on:
       - kafka
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.3.2
+    image: confluentinc/cp-zookeeper
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -106,7 +105,7 @@ services:
       ZOOKEEPER_SERVERS: zookeeper:2888:3888
 
   kafka:
-    image: confluentinc/cp-kafka:7.3.2
+    image: confluentinc/cp-kafka
     hostname: kafka
     container_name: kafka
     ports:

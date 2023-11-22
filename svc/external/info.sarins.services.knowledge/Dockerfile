@@ -7,10 +7,10 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["info.sarins.services.knowledge/info.sarins.services.knowledge.csproj", "info.sarins.services.knowledge/"]
-RUN dotnet restore "info.sarins.services.knowledge/info.sarins.services.knowledge.csproj"
+COPY ["external/info.sarins.services.knowledge/info.sarins.services.knowledge.csproj", "external/info.sarins.services.knowledge/"]
+RUN dotnet restore "external/info.sarins.services.knowledge/info.sarins.services.knowledge.csproj"
 COPY . .
-WORKDIR "/src/info.sarins.services.knowledge"
+WORKDIR "/src/external/info.sarins.services.knowledge"
 RUN dotnet build "info.sarins.services.knowledge.csproj" -c Release -o /app/build
 
 FROM build AS publish

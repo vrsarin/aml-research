@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using info.sarins.services.vault.Data;
+using info.sarins.services.shared.data;
 
 #nullable disable
 
-namespace info.sarins.services.vault.Migrations
+namespace info.sarins.services.shared.Migrations
 {
     [DbContext(typeof(VaultDBContext))]
-    [Migration("20231121003931_v1")]
+    [Migration("20231122234110_v1")]
     partial class v1
     {
         /// <inheritdoc />
@@ -22,14 +22,17 @@ namespace info.sarins.services.vault.Migrations
                 .HasAnnotation("ProductVersion", "7.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "source_type", new[] { "notes", "file", "url", "link" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "stage_types", new[] { "pending", "uploaded", "queued", "processing", "processed", "error" });
+            NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "status_types", new[] { "open", "data_gathering", "analyzing", "report_generation", "closed", "archived" });
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("info.sarins.services.vault.Data.Models.CaseFiles", b =>
+            modelBuilder.Entity("info.sarins.services.shared.data.models.VaultRecord", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<string>("CaseFile")
+                    b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -41,7 +44,7 @@ namespace info.sarins.services.vault.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CaseFiles");
+                    b.ToTable("Vaults");
                 });
 #pragma warning restore 612, 618
         }

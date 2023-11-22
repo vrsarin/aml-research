@@ -1,7 +1,9 @@
-﻿using Minio;
+﻿using Microsoft.Extensions.Logging;
 using Minio.DataModel.Args;
+using Minio.DataModel.Notification;
+using Minio;
 
-namespace info.sarins.services.vault
+namespace info.sarins.services.shared.storage
 {
     public class StorageRespository : IStorageRespository
     {
@@ -21,6 +23,7 @@ namespace info.sarins.services.vault
             {
                 var bucket = new MakeBucketArgs().WithBucket(bucketId);
                 await minioClient.MakeBucketAsync(bucket);
+                await SetBucketNotification(bucketId);
             }
             else
             {
@@ -38,11 +41,24 @@ namespace info.sarins.services.vault
 
         public async Task<string> GetFileUrl(string bucketId, string fileName)
         {
-
-            return await minioClient
-                .PresignedGetObjectAsync(new PresignedGetObjectArgs().WithBucket(bucketId).WithObject(fileName).WithExpiry(300));
-
+            return await minioClient.PresignedGetObjectAsync(new PresignedGetObjectArgs().WithBucket(bucketId).WithObject(fileName).WithExpiry(300));
         }
 
+        private async Task SetBucketNotification(string bucketId)
+        {
+
+            var notification = new BucketNotification();
+            var args = new SetBucketNotificationsArgs()
+                .WithBucket(bucketId)
+                .WithBucketNotificationConfiguration(notification);
+
+            // Uncomment the code below and change Arn and event types to configure.
+
+            QueueConfig queueConfiguration = new QueueConfig("arn:minio:sqs::docker:kafka");
+            queueConfiguration.AddEvents(new List<EventType>() { EventType.ObjectCreatedAll, EventType.ObjectRemovedAll });
+            notification.AddQueue(queueConfiguration);
+
+            await minioClient.SetBucketNotificationsAsync(args).ConfigureAwait(false);
+        }
     }
 }

@@ -17,8 +17,8 @@ services:
   graphservice:
     image: graph
     build:
-      context: ./svc/external
-      dockerfile: info.sarins.services.knowledge/Dockerfile
+      context: ./svc
+      dockerfile: external/info.sarins.services.knowledge/Dockerfile
       args:
         - configuration=Debug
     ports:
@@ -32,8 +32,8 @@ services:
   vaultservice:
     image: vault
     build:
-      context: ./svc/external
-      dockerfile: info.sarins.services.vault/Dockerfile
+      context: ./svc
+      dockerfile: external/info.sarins.services.vault/Dockerfile
       args:
         - configuration=Debug
     ports:

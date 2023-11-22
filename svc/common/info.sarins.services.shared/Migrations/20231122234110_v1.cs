@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace info.sarins.services.vault.Migrations
+namespace info.sarins.services.shared.Migrations
 {
     /// <inheritdoc />
     public partial class v1 : Migration
@@ -10,18 +10,23 @@ namespace info.sarins.services.vault.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:Enum:source_type", "notes,file,url,link")
+                .Annotation("Npgsql:Enum:stage_types", "pending,uploaded,queued,processing,processed,error")
+                .Annotation("Npgsql:Enum:status_types", "open,data_gathering,analyzing,report_generation,closed,archived");
+
             migrationBuilder.CreateTable(
-                name: "CaseFiles",
+                name: "Vaults",
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
                     DisplayName = table.Column<string>(type: "text", nullable: true),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    CaseFile = table.Column<string>(type: "text", nullable: false)
+                    Content = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CaseFiles", x => x.Id);
+                    table.PrimaryKey("PK_Vaults", x => x.Id);
                 });
         }
 
@@ -29,7 +34,7 @@ namespace info.sarins.services.vault.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CaseFiles");
+                name: "Vaults");
         }
     }
 }
