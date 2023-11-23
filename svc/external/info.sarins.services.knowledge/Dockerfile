@@ -8,6 +8,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["external/info.sarins.services.knowledge/info.sarins.services.knowledge.csproj", "external/info.sarins.services.knowledge/"]
+COPY ["common/info.sarins.services.shared/info.sarins.services.shared.csproj", "common/info.sarins.services.shared/"]
 RUN dotnet restore "external/info.sarins.services.knowledge/info.sarins.services.knowledge.csproj"
 COPY . .
 WORKDIR "/src/external/info.sarins.services.knowledge"

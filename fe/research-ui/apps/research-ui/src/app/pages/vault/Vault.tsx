@@ -1,18 +1,8 @@
-import {
-  Stack,
-  Box,
-  AppBar,
-  Toolbar,
-  IconButton,
-  Typography,
-  Tabs,
-  Tab,
-} from '@mui/material';
+import { Stack, Box, Typography, Tabs, Tab } from '@mui/material';
 
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import GeneralTab from './data-tabs/general-tab/GeneralTab';
-import { MouseEvent, SyntheticEvent, useEffect, useState } from 'react';
-import MenuIcon from '@mui/icons-material/Menu';
+import { SyntheticEvent, useEffect, useState } from 'react';
 import axios from 'axios';
 import { EntityModel } from '../../models/Entity.Model';
 import Nodes from './data-tabs/nodes/Nodes';
@@ -61,7 +51,6 @@ export function Vault() {
   const id = new URLSearchParams(search).get('id') ?? '';
 
   const [value, setValue] = useState(0);
-  const navigate = useNavigate();
 
   const initialState: EntityModel[] = [];
 
@@ -84,29 +73,8 @@ export function Vault() {
     setValue(newValue);
   };
 
-  function handleHome(event: MouseEvent<HTMLButtonElement>): void {
-    navigate('/');
-  }
   return (
     <Stack flexDirection={'column'}>
-      <Box paddingBottom={3}>
-        <AppBar position="static">
-          <Toolbar>
-            <IconButton
-              size="large"
-              edge="start"
-              color="inherit"
-              aria-label="menu"
-              sx={{ mr: 2 }}
-              onClick={handleHome}
-            >
-              <MenuIcon />
-            </IconButton>
-
-            <Typography>Case Details</Typography>
-          </Toolbar>
-        </AppBar>
-      </Box>
       <Tabs
         value={value}
         onChange={handleChange}

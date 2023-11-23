@@ -36,7 +36,7 @@ export function CaseFileGrid(props: CaseFileGridProps) {
     }
 
     return (
-      <Box padding={1}>
+      <Box key={value.vaultId} padding={1}>
         <Card>
           <CardHeader
             avatar={<Avatar aria-label="Case File"></Avatar>}

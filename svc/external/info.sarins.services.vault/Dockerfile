@@ -8,7 +8,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["external/info.sarins.services.vault/info.sarins.services.vault.csproj", "external/info.sarins.services.vault/"]
-COPY ["core/info.sarins.services.shared/info.sarins.services.shared.csproj", "core/info.sarins.services.shared/"]
+COPY ["common/info.sarins.services.shared/info.sarins.services.shared.csproj", "common/info.sarins.services.shared/"]
 RUN dotnet restore "external/info.sarins.services.vault/info.sarins.services.vault.csproj"
 COPY . .
 WORKDIR "/src/external/info.sarins.services.vault"
