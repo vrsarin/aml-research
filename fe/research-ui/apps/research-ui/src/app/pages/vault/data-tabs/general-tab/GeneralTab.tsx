@@ -11,15 +11,16 @@ import {
 import {
   CaseFileModel,
   CaseStatus,
-} from 'apps/research-ui/src/app/models/CaseFile.Model';
+} from 'apps/research-ui/src/app/models/Vault.Model';
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import AddLinkIcon from '@mui/icons-material/AddLink';
 import AddNote from './actions/add-notes/AddNote';
+import { environment } from 'apps/research-ui/src/environments/environment';
 
 const client = axios.create({
-  baseURL: 'http://host.docker.internal:8081/case-files',
+  baseURL: environment.VAULT_URL,
 });
 export interface GeneralTabProps {
   identifier: string;
@@ -38,8 +39,8 @@ const VisuallyHiddenInput = styled('input')({
 
 export function GeneralTab(props: GeneralTabProps) {
   const initialState: CaseFileModel = {
-    identifier: 0,
-    caseStatus: CaseStatus.Open,
+    vaultId: '',
+    status: CaseStatus.Open,
     name: '',
     description: '',
   };
@@ -99,7 +100,7 @@ export function GeneralTab(props: GeneralTabProps) {
   return (
     <Box paddingBottom={0.5}>
       <Box padding={2}>
-        <Typography>Case File: {caseFile.identifier}</Typography>
+        <Typography>Case #: {caseFile.vaultId}</Typography>
       </Box>
       <Box padding={1}>
         <TextField

@@ -19,7 +19,7 @@ export interface AddNoteProps {
 
 export function AddNote(props: AddNoteProps) {
   const client = axios.create({
-    baseURL: 'http://host.docker.internal:8081/case-files',
+    baseURL: process.env.REACT_APP_VAULT_URL,
   });
   const [note, setNote] = useState({
     name: '',

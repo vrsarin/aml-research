@@ -3,6 +3,7 @@ import { Divider, Grid, InputLabel, MenuItem, Select } from '@mui/material';
 
 import { EntityModel } from 'apps/research-ui/src/app/models/Entity.Model';
 import axios from 'axios';
+import { environment } from 'apps/research-ui/src/environments/environment';
 
 export interface NodedProperties {
   identifier: string;
@@ -10,7 +11,7 @@ export interface NodedProperties {
 }
 
 const client = axios.create({
-  baseURL: 'http://localhost:8082/case-files',
+  baseURL: environment.GRAPH_URL,
 });
 export function Nodes(props: NodedProperties) {
   const [label, setLabel] = useState('');

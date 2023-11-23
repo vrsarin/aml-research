@@ -1,7 +1,7 @@
 export interface CaseFileModel {
-  identifier: number;
-  caseStatus: CaseStatus;
+  vaultId: string;
   name: string;
+  status: CaseStatus;  
   description: string;
 }
 

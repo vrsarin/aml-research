@@ -8,17 +8,18 @@ import CaseFileGrid from './case-file-grid/CaseFileGrid';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import CreateCaseFile from './create-case-file/CreateCaseFile';
 import axios from 'axios';
-import { CaseFileModel } from '../../models/CaseFile.Model';
+import { CaseFileModel } from '../../models/Vault.Model';
 import { ActionTypes } from '../../models/Action-Types.Enum';
+import { environment } from 'apps/research-ui/src/environments/environment';
 
 const client = axios.create({
-  baseURL: 'http://localhost:8081/case-files',
+  baseURL: environment.VAULT_URL,
 });
 
 export function Home() {
   const initialState: CaseFileModel[] = [];
 
-  const [folders, setFolders] = useState(initialState);
+  const [vaults,setVaults] = useState(initialState);
   const [value, setValue] = useState('Grid');
   const [open, setOpen] = useState(false);
 
@@ -49,10 +50,12 @@ export function Home() {
   function getFolders(): void {
     client
       .get('')
-      .then((response) => {
-        setFolders(response.data);
+      .then((response) => {       
+        setVaults(response.data);
       })
-      .catch((response) => alert(response));
+      .catch((response) => {
+        alert(response)
+      });
   }
 
   function archiveFolder(identifier: string): void {
@@ -117,7 +120,7 @@ export function Home() {
         {value === 'List' ? (
           <CasefileList />
         ) : (
-          <CaseFileGrid folders={folders} handleAction={handleAction} />
+          <CaseFileGrid vaults={vaults} handleAction={handleAction} />
         )}
       </Box>
       <CreateCaseFile open={open} handleClose={handleClose}></CreateCaseFile>

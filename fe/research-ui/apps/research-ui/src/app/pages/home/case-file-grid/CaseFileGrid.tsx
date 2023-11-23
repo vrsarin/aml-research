@@ -13,11 +13,11 @@ import {
 import ArchiveIcon from '@mui/icons-material/Archive';
 import FileOpenIcon from '@mui/icons-material/FileOpen';
 import { useNavigate } from 'react-router-dom';
-import { CaseFileModel, CaseStatus } from '../../../models/CaseFile.Model';
+import { CaseFileModel, CaseStatus } from '../../../models/Vault.Model';
 import { ActionTypes } from '../../../models/Action-Types.Enum';
 
 export interface CaseFileGridProps {
-  folders: CaseFileModel[];
+  vaults: CaseFileModel[];
   handleAction(actionType: ActionTypes, identifier: string): void;
 }
 
@@ -26,10 +26,10 @@ export function CaseFileGrid(props: CaseFileGridProps) {
 
   function RenderCards(value: CaseFileModel): any {
     function handleArchiveVisibility(): boolean {
-      return value.caseStatus === CaseStatus.Archived;
+      return value.status === CaseStatus.Archived;
     }
     function handleOpenFile(event: any): void {
-      navigate(`/vault?id=${value.identifier}`);
+      navigate(`/vault?id=${value.vaultId}`);
     }
     function handleArchive(event: MouseEvent<HTMLButtonElement>): void {
       props.handleAction(ActionTypes.ArchiveFolder, event.currentTarget.id);
@@ -41,7 +41,7 @@ export function CaseFileGrid(props: CaseFileGridProps) {
           <CardHeader
             avatar={<Avatar aria-label="Case File"></Avatar>}
             title={value.name}
-            subheader={value.caseStatus}
+            subheader={value.status}
           ></CardHeader>
           <CardContent>{value.description}</CardContent>
           <CardActions disableSpacing>
@@ -49,7 +49,7 @@ export function CaseFileGrid(props: CaseFileGridProps) {
               <FileOpenIcon></FileOpenIcon>
             </IconButton>
             <IconButton
-              id={`${value.identifier}`}
+              id={`${value.vaultId}`}
               aria-label="Archive Case"
               onClick={handleArchive}
               disabled={handleArchiveVisibility()}
@@ -70,7 +70,11 @@ export function CaseFileGrid(props: CaseFileGridProps) {
         useFlexGap
         flexWrap="wrap"
       >
-        {props.folders.map((r: CaseFileModel) => RenderCards(r))}
+        {props.vaults.length > 0 ? (
+          props.vaults.map((r: CaseFileModel) => RenderCards(r))
+        ) : (
+          <Box></Box>
+        )}
       </Stack>
     </Container>
   );

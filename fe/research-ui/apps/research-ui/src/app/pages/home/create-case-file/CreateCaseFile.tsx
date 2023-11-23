@@ -1,4 +1,4 @@
-import { ChangeEvent, MouseEvent, useState } from 'react';
+import { MouseEvent, useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -9,10 +9,11 @@ import {
   Button,
 } from '@mui/material';
 import axios from 'axios';
-import { CaseFileModel, CaseStatus } from '../../../models/CaseFile.Model';
+import { CaseFileModel, CaseStatus } from '../../../models/Vault.Model';
+import { environment } from 'apps/research-ui/src/environments/environment';
 
 const client = axios.create({
-  baseURL: 'http://localhost:8081/case-files',
+  baseURL: environment.VAULT_URL,
 });
 export interface CreateCaseFileProps {
   open: boolean;
@@ -20,11 +21,11 @@ export interface CreateCaseFileProps {
 }
 
 export function CreateCaseFile(props: CreateCaseFileProps) {
-  const initialState:CaseFileModel={
-    identifier: 0,
-    caseStatus: CaseStatus.Open,
+  const initialState: CaseFileModel = {
+    vaultId: '',
+    status: CaseStatus.Open,
     name: '',
-    description: ''
+    description: '',
   };
   const [folder, setfolder] = useState(initialState);
 
@@ -39,10 +40,10 @@ export function CreateCaseFile(props: CreateCaseFileProps) {
         props.handleClose(true);
       })
       .catch((response) => {
-        alert(response);        
+        alert(response);
       });
   }
-  
+
   return (
     <Dialog open={props.open} onClose={handleClose}>
       <DialogTitle>Create New Case Folder</DialogTitle>
@@ -61,7 +62,9 @@ export function CreateCaseFile(props: CreateCaseFileProps) {
           type="text"
           fullWidth
           variant="standard"
-          onChange={(e)=>setfolder({ ...folder, name: e.currentTarget.value })}
+          onChange={(e) =>
+            setfolder({ ...folder, name: e.currentTarget.value })
+          }
         />
         <TextField
           margin="dense"
@@ -71,7 +74,9 @@ export function CreateCaseFile(props: CreateCaseFileProps) {
           type="text"
           fullWidth
           variant="standard"
-          onChange={(e)=>setfolder({ ...folder, description: e.currentTarget.value })}
+          onChange={(e) =>
+            setfolder({ ...folder, description: e.currentTarget.value })
+          }
         />
       </DialogContent>
       <DialogActions>

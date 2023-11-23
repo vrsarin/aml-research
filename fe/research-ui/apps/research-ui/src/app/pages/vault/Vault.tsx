@@ -16,9 +16,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import axios from 'axios';
 import { EntityModel } from '../../models/Entity.Model';
 import Nodes from './data-tabs/nodes/Nodes';
+import { environment } from 'apps/research-ui/src/environments/environment';
 
 const client = axios.create({
-  baseURL: 'http://localhost:8081/case-files',
+  baseURL: environment.VAULT_URL,
 });
 
 interface TabPanelProps {
@@ -114,8 +115,10 @@ export function Vault() {
         <Tab label="General" {...a11yProps(0)} />
         <Tab label="Entities" {...a11yProps(1)} />
         <Tab label="Relationship" {...a11yProps(2)} />
+        <Tab label="Linked Cases **" {...a11yProps(2)} />
         <Tab label="Analysis" {...a11yProps(2)} />
         <Tab label="Report" {...a11yProps(2)} />
+        <Tab label="Case Summary **" {...a11yProps(2)} />
       </Tabs>
 
       <CustomTabPanel value={value} index={0}>
