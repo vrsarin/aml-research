@@ -1,4 +1,6 @@
 using info.sarins.services.shared.data;
+using info.sarins.services.shared.storage;
+using Minio;
 
 namespace info.sarins.workers.documents.loader
 {
@@ -6,15 +8,15 @@ namespace info.sarins.workers.documents.loader
     {
         public static void Main(string[] args)
         {
-            IHost host = Host.CreateDefaultBuilder(args)
+            var builder = Host.CreateDefaultBuilder(args);
+            IHost host = builder
                 .ConfigureServices(services =>
                 {
-                    services.AddHostedService<Worker>();
                     services.AddDbContext<VaultDBContext>();
                     services.AddTransient<IVaultDataService, VaultDataService>();
+                    services.AddHostedService<Worker>();
                 })
                 .Build();
-
             host.Run();
         }
     }

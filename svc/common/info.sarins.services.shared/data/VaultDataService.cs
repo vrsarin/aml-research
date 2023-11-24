@@ -1,6 +1,5 @@
 ﻿using info.sarins.services.shared.data.models;
 using info.sarins.services.shared.http.requests.models;
-using info.sarins.services.shared.storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -10,14 +9,14 @@ namespace info.sarins.services.shared.data
     {
         private readonly ILogger<VaultDataService> logger;
         private readonly VaultDBContext context;
-        private readonly IStorageRespository storageRespository;
 
-        public VaultDataService(ILogger<VaultDataService> logger, VaultDBContext dBContext, IStorageRespository storageRespository)
+        public VaultDataService(ILogger<VaultDataService> logger, VaultDBContext dBContext)
         {
             this.logger = logger;
             this.context = dBContext;
-            this.storageRespository = storageRespository;
+
         }
+
         public async Task<List<Vault>> GetVaultAsync()
         {
             List<Vault> vaults = new();
@@ -30,7 +29,7 @@ namespace info.sarins.services.shared.data
             return vaults;
         }
 
-        public async Task AddVault(Vault vault)
+        public async Task<bool> AddVault(Vault vault)
         {
             VaultRecord dbFile = new()
             {
@@ -39,10 +38,9 @@ namespace info.sarins.services.shared.data
                 Content = vault.ToJson(),
             };
 
-            await storageRespository.CreateBucketAsync(dbFile.Id);
             await context.Vaults.AddAsync(dbFile);
             await context.SaveChangesAsync();
-
+            return true;
         }
 
         public async Task<Vault?> UpdateVault(string vaultId, Vault vault)
@@ -72,11 +70,12 @@ namespace info.sarins.services.shared.data
             return dbFile.Content?.FromJson<Vault?>();
         }
 
-        public async Task DeleteVaultAsync(string vaultId)
+        public async Task<bool> DeleteVaultAsync(string vaultId)
         {
             var dbFile = await context.Vaults.Where(f => f.Id.Equals(vaultId)).FirstAsync();
             context.Vaults.Remove(dbFile);
             await context.SaveChangesAsync();
+            return true;
         }
     }
 }

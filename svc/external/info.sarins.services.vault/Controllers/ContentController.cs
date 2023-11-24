@@ -38,6 +38,10 @@ namespace info.sarins.services.vault.Controllers
         public async Task<IActionResult> GetDownloadUrl(string vaultid, string fileName)
         {
             var vault = await this.vaultService.GetVaultAsync(vaultid);
+            if (vault == null)
+            {
+                return NoContent();
+            }
             return Ok(await storageRespository.GetFileUrl(vault.VaultId, fileName));
         }
 

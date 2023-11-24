@@ -1,6 +1,8 @@
 ﻿using info.sarins.services.shared.data;
 using info.sarins.services.shared.http.requests.models;
+using info.sarins.services.shared.storage;
 using Microsoft.AspNetCore.Mvc;
+using Minio.Exceptions;
 
 namespace info.sarins.services.vault.Controllers
 {
@@ -10,11 +12,13 @@ namespace info.sarins.services.vault.Controllers
     {
         private readonly ILogger<VaultsController> logger;
         private readonly IVaultDataService vaultService;
+        private readonly IStorageRespository storageRespository;
 
-        public VaultsController(ILogger<VaultsController> logger, IVaultDataService vaultService)
+        public VaultsController(ILogger<VaultsController> logger, IVaultDataService vaultService, IStorageRespository storageRespository)
         {
             this.logger = logger;
             this.vaultService = vaultService;
+            this.storageRespository = storageRespository;
         }
 
         [HttpGet]
@@ -35,9 +39,19 @@ namespace info.sarins.services.vault.Controllers
         [Tags("Vault")]
         public async Task<IActionResult> Add(Vault vault)
         {
+
             if (string.IsNullOrEmpty(vault.VaultId))
                 vault.VaultId = Guid.NewGuid().ToString();
-            await vaultService.AddVault(vault);
+
+            if (!await vaultService.AddVault(vault))
+            {
+                return StatusCode(500, new { Message = "Unable to initialize database record." });
+            }
+
+            if (!await storageRespository.CreateBucketAsync(vault.VaultId))
+            {
+                return StatusCode(500, new { Message = "Failed to initialize storage." });
+            }
             return Ok();
         }
 
@@ -61,7 +75,10 @@ namespace info.sarins.services.vault.Controllers
         [Tags("Vault")]
         public async Task<IActionResult> Delete([FromRoute] string vaultId)
         {
-            await vaultService.DeleteVaultAsync(vaultId);
+            if (!await vaultService.DeleteVaultAsync(vaultId))
+            {
+                return NoContent();
+            }
             return Ok();
         }
     }

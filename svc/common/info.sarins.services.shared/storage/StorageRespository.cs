@@ -16,18 +16,18 @@ namespace info.sarins.services.shared.storage
             this.minioClient = minioClient;
         }
 
-
-        public async Task CreateBucketAsync(string bucketId)
+        public async Task<bool> CreateBucketAsync(string bucketId)
         {
             if (!await minioClient.BucketExistsAsync(new BucketExistsArgs().WithBucket(bucketId)))
             {
                 var bucket = new MakeBucketArgs().WithBucket(bucketId);
                 await minioClient.MakeBucketAsync(bucket);
                 await SetBucketNotification(bucketId);
+                return true;
             }
             else
             {
-                throw new ApplicationException("Storage already exists");
+                return false;
             }
         }
 

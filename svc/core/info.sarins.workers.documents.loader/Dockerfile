@@ -6,7 +6,7 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["core/info.sarins.workers.documents.loader/info.sarins.workers.documents.loader.csproj", "core/info.sarins.workers.documents.loader/"]
-COPY ["core/info.sarins.services.shared/info.sarins.services.shared.csproj", "core/info.sarins.services.shared/"]
+COPY ["common/info.sarins.services.shared/info.sarins.services.shared.csproj", "common/info.sarins.services.shared/"]
 RUN dotnet restore "core/info.sarins.workers.documents.loader/info.sarins.workers.documents.loader.csproj"
 COPY . .
 WORKDIR "/src/core/info.sarins.workers.documents.loader"
