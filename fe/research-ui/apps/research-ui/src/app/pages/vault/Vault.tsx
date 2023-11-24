@@ -1,5 +1,4 @@
 import { Stack, Box, Typography, Tabs, Tab } from '@mui/material';
-
 import { useLocation } from 'react-router-dom';
 import GeneralTab from './data-tabs/general-tab/GeneralTab';
 import { SyntheticEvent, useEffect, useState } from 'react';
@@ -7,6 +6,7 @@ import axios from 'axios';
 import { EntityModel } from '../../models/Entity.Model';
 import Nodes from './data-tabs/nodes/Nodes';
 import { environment } from 'apps/research-ui/src/environments/environment';
+import Storage from './data-tabs/storage/Storage';
 
 const client = axios.create({
   baseURL: environment.VAULT_URL,
@@ -81,8 +81,9 @@ export function Vault() {
         aria-label="basic tabs example"
       >
         <Tab label="General" {...a11yProps(0)} />
+        <Tab label="Files" {...a11yProps(0)} />
         <Tab label="Entities" {...a11yProps(1)} />
-        <Tab label="Relationship" {...a11yProps(2)} />
+        {/* <Tab label="Relationship" {...a11yProps(2)} /> */}
         <Tab label="Linked Cases **" {...a11yProps(2)} />
         <Tab label="Analysis" {...a11yProps(2)} />
         <Tab label="Report" {...a11yProps(2)} />
@@ -93,6 +94,9 @@ export function Vault() {
         <GeneralTab identifier={id} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
+        <Storage identifier={id} />
+      </CustomTabPanel>
+      <CustomTabPanel value={value} index={2}>
         <Nodes entities={entities} identifier={id} />
       </CustomTabPanel>
     </Stack>

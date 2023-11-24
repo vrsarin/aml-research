@@ -43,6 +43,11 @@ const authenticated = await keycloak.init({
 //   let resultant = await keycloak.loadUserInfo();
 // }
 
+if (authenticated) {
+  sessionStorage.setItem('access_token', keycloak.token ?? '');
+  sessionStorage.setItem('id_token', keycloak.idToken ?? '');
+}
+
 export function Portal(props: PortalProps) {
   const navigate = useNavigate();
   function handleHome(event: MouseEvent<HTMLButtonElement>): void {
