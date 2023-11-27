@@ -8,24 +8,15 @@ import {
   Button,
   Box,
 } from '@mui/material';
-import { environment } from 'apps/research-ui/src/environments/environment';
-import axios from 'axios';
 import { MouseEvent, useState } from 'react';
 
 export interface AddNoteProps {
-  identifier: string;
   open: boolean;
   handleClose: (refresh: boolean) => void;
+  handleSave: (fileName: string, content: string) => void;
 }
 
-const client = axios.create({
-  baseURL: environment.VAULT_URL,
-});
-
 export function AddNote(props: AddNoteProps) {
-  const client = axios.create({
-    baseURL: process.env.REACT_APP_VAULT_URL,
-  });
   const [note, setNote] = useState({
     name: '',
     content: '',
@@ -36,27 +27,7 @@ export function AddNote(props: AddNoteProps) {
   }
 
   function handleSubmit(event: MouseEvent<HTMLButtonElement>): void {
-    client
-      .get(`${props.identifier}/content/upload-url?filename=${note.name}.txt`)
-      .then((response) => {
-        client
-          .put(response.data, note.content, {
-            headers: {
-              'Content-Type': 'text/plain',
-              'Content-Encoding': note.content.length,
-            },
-          })
-          .then((response) => props.handleClose(false))
-          .catch((response) => alert('Inner Loop ' + response));
-      })
-      .catch((response) => {
-        alert(response);
-      });
-    setNote({
-      name: '',
-      content: '',
-    });
-    props.handleClose(true);
+    props.handleSave(note.name, note.content);
   }
 
   return (

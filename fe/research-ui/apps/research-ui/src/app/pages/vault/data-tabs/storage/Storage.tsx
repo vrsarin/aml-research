@@ -1,4 +1,13 @@
-import { Box, Button, Grid, LinearProgress, styled } from '@mui/material';
+import {
+  Box,
+  Button,
+  Divider,
+  Grid,
+  LinearProgress,
+  Paper,
+  Stack,
+  styled,
+} from '@mui/material';
 import { environment } from 'apps/research-ui/src/environments/environment';
 import axios from 'axios';
 import * as Minio from 'minio';
@@ -25,20 +34,47 @@ const VisuallyHiddenInput = styled('input')({
 
 export function Storage(props: StorageProps) {
   let minioclient: Minio.Client;
+  const initialFileList: Minio.BucketItem[] = [];
 
-  const client = axios.create({
+  const http_client = axios.create({
     baseURL: environment.MINIO_URL,
   });
 
   useEffect(() => {
-    getMinioCredentials();
+    getMinioCredentials(() => {
+      getFileList();
+    });
   }, []);
 
   const [addNote, setAddNote] = useState(false);
+  const [bucketFiles, setBucketFiles] = useState(initialFileList);
   const [showProgress, setProgress] = useState('none');
 
-  function handleAddNodeClose(refresh: boolean): void {
+  function handleAddNoteClose(refresh: boolean): void {
     setAddNote(false);
+  }
+
+  function handleAddNoteSave(name: string, content: string): void {
+    getMinioCredentials(() => {
+      minioclient.putObject(
+        props.identifier,
+        `${name.replace(' ', '_')}.txt`,
+        content,
+        content.length,
+        {
+          'Content-Type': 'text/plain',
+          Test_Data: 'Tested',
+          'acquired-from': 'notes',
+        },
+        function (err, objInfo) {
+          if (err) {
+            alert(err);
+          }
+          setAddNote(false);
+          getFileList();
+        }
+      );
+    });
   }
 
   function handleAddNoteOpen(event: MouseEvent<HTMLLabelElement>): void {
@@ -47,29 +83,42 @@ export function Storage(props: StorageProps) {
 
   function handleFileSelected(event: SyntheticEvent<HTMLInputElement>): void {
     const files = Array.from(event.currentTarget.files ?? []);
-    files.map((file) => {
-      setProgress('');
-      client
-        .get(`${props.identifier}/content/upload-url?filename=${file.name}`)
-        .then((response) => {
-          client
-            .put(response.data, file, {
-              headers: {
-                'Content-Type': file.type,
-                'Content-Encoding': file.length,
-              },
-            })
-            .then((response) => setProgress('none'))
-            .catch((response) => alert('Inner Loop ' + response));
-        })
-        .catch((response) => {
-          alert(response);
-        });
+    setProgress('');
+    getMinioCredentials(() => {
+      files.map((file) => {
+        minioclient.presignedPutObject(
+          props.identifier,
+          file.name,
+          function (err, preSignedUrl) {
+            if (err) {
+              alert(err);
+            }
+            const uploadFile = axios.create({
+              baseURL: preSignedUrl,
+            });
+            uploadFile
+              .put('', file, {
+                headers: {
+                  'Content-Type': file.type,
+                  'Content-Encoding': file.length,
+                  'acquired-from': 'upload',
+                },
+              })
+              .then((response) => {
+                getFileList();
+              })
+              .catch((error) => {
+                alert(error);
+              });
+          }
+        );
+      });
     });
+    setProgress('none');
   }
 
-  function getMinioCredentials() {
-    client
+  function getMinioCredentials(callback: () => void) {
+    http_client
       .post(
         `?Action=AssumeRoleWithWebIdentity&Version=2011-06-15&DurationSeconds=86000&WebIdentityToken=${sessionStorage.getItem(
           'access_token'
@@ -97,21 +146,30 @@ export function Storage(props: StorageProps) {
               .getElementsByTagName('SessionToken')[0]
               .textContent?.toString() ?? '',
         });
-        getFileList();
+        callback();
       })
-      .catch((response) => alert(response));
+      .catch((response) => {
+        alert(response);
+      });
   }
 
   function getFileList() {
     const files = minioclient.listObjectsV2(props.identifier);
     files.on('data', function (obj) {
-      alert(obj.name);
+      const found = bucketFiles.filter((r) => r.name === obj.name);
+      if (found.length <= 0) {
+        setBucketFiles((f) => {
+          return [...f, obj];
+        });
+      }
     });
     files.on('error', function (e) {
       console.log(e);
     });
   }
-
+  function handleShowFileMetaData(event: MouseEvent<HTMLButtonElement>): void {
+    alert(`We will show details of file selected ${event.currentTarget.id}`);
+  }
   return (
     <Box>
       <Box>
@@ -132,21 +190,45 @@ export function Storage(props: StorageProps) {
           </Button>
         </Box>
         <AddNote
-          identifier={props.identifier}
           open={addNote}
-          handleClose={handleAddNodeClose}
+          handleClose={handleAddNoteClose}
+          handleSave={handleAddNoteSave}
         ></AddNote>
         <Box sx={{ width: '100%' }} display={showProgress}>
           <LinearProgress />
         </Box>
+        <Divider></Divider>
       </Box>
       <Box>
         <Grid container xs flexDirection={'row'}>
-          <Grid item xs={4}>
-            Treeview:
+          <Grid item xs={4} paddingTop={2}>
+            <Stack spacing={1}>
+              <Paper
+                elevation={2}
+                sx={{ padding: '5px;', textAlign: 'center' }}
+              >
+                Files:{' '}
+              </Paper>
+              {bucketFiles.map((r) => {
+                return (
+                  <Button
+                    id={r.name}
+                    variant="outlined"
+                    sx={{
+                      padding: '5px;',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                    onClick={handleShowFileMetaData}
+                  >
+                    {r.name}
+                  </Button>
+                );
+              })}
+            </Stack>
           </Grid>
-          <Grid item xs>
-            Visual:
+          <Grid item xs textAlign={'center'}>
+            File Details:
           </Grid>
         </Grid>
       </Box>
