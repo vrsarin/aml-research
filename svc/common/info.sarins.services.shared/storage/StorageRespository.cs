@@ -55,6 +55,8 @@ namespace info.sarins.services.shared.storage
             // Uncomment the code below and change Arn and event types to configure.
 
             QueueConfig queueConfiguration = new QueueConfig("arn:minio:sqs::docker:kafka");
+            // TODO: Currently ignore Delete Events. we will handle it later. 
+            //queueConfiguration.AddEvents(new List<EventType>() { EventType.ObjectCreatedAll, EventType.ObjectRemovedAll });
             queueConfiguration.AddEvents(new List<EventType>() { EventType.ObjectCreatedAll, EventType.ObjectRemovedAll });
             notification.AddQueue(queueConfiguration);
 

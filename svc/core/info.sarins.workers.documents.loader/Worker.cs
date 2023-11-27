@@ -14,8 +14,8 @@ namespace info.sarins.workers.documents.loader
 
         public Worker(ILogger<Worker> logger, IConfiguration configuration)
         {
-            _logger = logger;           
-           this.vaultService= new VaultDataService(default, new VaultDBContext(configuration));
+            _logger = logger;
+            this.vaultService = new VaultDataService(default, new VaultDBContext(configuration));
             kafkaConfig = new ConsumerConfig()
             {
                 BootstrapServers = configuration.GetValue<string>("kafka:hosts"),
@@ -49,6 +49,7 @@ namespace info.sarins.workers.documents.loader
                         if (vault != null)
                         {
                             var content = vault.Contents?.Where(c => c.ContentId.Equals(item.s3.Object.key)).First();
+                            // Currently only ingest added files deleted files should be ignored.
                             if (content != null)
                             {
                                 content.Stage = services.shared.StageTypes.Uploaded;
@@ -62,13 +63,14 @@ namespace info.sarins.workers.documents.loader
                                 vault.Contents.Add(new services.shared.http.requests.models.Content()
                                 {
                                     ContentId = Guid.NewGuid().ToString(),
-                                    FileName= item.s3.Object.key,
-                                    Source=services.shared.SourceType.File,
-                                    ContentType=item.s3.Object.contentType,
-                                    Stage=services.shared.StageTypes.Uploaded,
+                                    FileName = item.s3.Object.key,
+                                    Source = services.shared.SourceType.File,
+                                    ContentType = item.s3.Object.contentType,
+                                    Stage = services.shared.StageTypes.Uploaded,
 
-                                }) ;
+                                });
                                 await vaultService.UpdateVault(vault.VaultId, vault);
+                                _logger.LogInformation($"Updated content information for vault")
                             }
                         }
                     }
