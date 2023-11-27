@@ -34,9 +34,9 @@ namespace info.sarins.workers.documents.loader
             _logger.LogInformation("Starting Kafka Consumer");
             while (!stoppingToken.IsCancellationRequested)
             {
-                var consumeResult = consumer.Consume(stoppingToken);
                 try
                 {
+                    var consumeResult = consumer.Consume(stoppingToken);
                     var message = consumeResult.Message;
                     _logger.LogInformation($"Recieved message with key={message.Key}");
                     var eventDetails = JsonConvert.DeserializeObject<MinioEventDetails>(message.Value);
@@ -70,7 +70,7 @@ namespace info.sarins.workers.documents.loader
 
                                 });
                                 await vaultService.UpdateVault(vault.VaultId, vault);
-                                _logger.LogInformation($"Updated content information for vault")
+                                _logger.LogInformation($"Updated content information for vault");
                             }
                         }
                     }
