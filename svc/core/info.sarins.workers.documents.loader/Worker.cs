@@ -12,14 +12,14 @@ namespace info.sarins.workers.documents.loader
         private readonly ConsumerConfig kafkaConfig;
         private readonly string[]? kafkaTopics;
 
-        public Worker(ILogger<Worker> logger, IConfiguration configuration, IVaultDataService vaultService)
+        public Worker(ILogger<Worker> logger, IConfiguration configuration)
         {
-            _logger = logger;
-            this.vaultService = vaultService;
+            _logger = logger;           
+           this.vaultService= new VaultDataService(default, new VaultDBContext(configuration));
             kafkaConfig = new ConsumerConfig()
             {
                 BootstrapServers = configuration.GetValue<string>("kafka:hosts"),
-                GroupId = "documentloader",
+                GroupId = "document-loaders",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 EnableAutoCommit = false
             };
@@ -31,7 +31,7 @@ namespace info.sarins.workers.documents.loader
             using var consumer = new ConsumerBuilder<Ignore, string>(kafkaConfig).Build();
 
             consumer.Subscribe(kafkaTopics);
-
+            _logger.LogInformation("Starting Kafka Consumer");
             while (!stoppingToken.IsCancellationRequested)
             {
                 var consumeResult = consumer.Consume(stoppingToken);
@@ -41,7 +41,7 @@ namespace info.sarins.workers.documents.loader
                     _logger.LogInformation($"Recieved message with key={message.Key}");
                     var eventDetails = JsonConvert.DeserializeObject<MinioEventDetails>(message.Value);
                     /* Update Vault Information
-                     * Decision: Should we call Vault or Simply update DB? currently updating DB directly for speed.                     
+                     * Decision: Should we call Vault or Simply update DB? currently updating DB directly for speed of implementation.                    
                      */
                     foreach (var item in eventDetails?.Records ?? new List<MinioRecord>())
                     {
@@ -55,15 +55,23 @@ namespace info.sarins.workers.documents.loader
                                 await vaultService.UpdateVault(vault.VaultId, vault);
                                 _logger.LogInformation($"Vault ({vault.VaultId}) has uploaded content {content.Description}");
                             }
+                            else
+                            {
+                                if (vault.Contents == null)
+                                    vault.Contents = new List<services.shared.http.requests.models.Content>();
+                                vault.Contents.Add(new services.shared.http.requests.models.Content()
+                                {
+                                    ContentId = Guid.NewGuid().ToString(),
+                                    FileName= item.s3.Object.key,
+                                    Source=services.shared.SourceType.File,
+                                    ContentType=item.s3.Object.contentType,
+                                    Stage=services.shared.StageTypes.Uploaded,
+
+                                }) ;
+                                await vaultService.UpdateVault(vault.VaultId, vault);
+                            }
                         }
                     }
-
-
-                    /* Send it for ingestion
-                     * Should it be another queue for workers or simple a api call
-                     * Try c# to call openAI
-                     */
-
                     consumer.Commit(consumeResult);
                 }
                 catch (KafkaException e)
@@ -71,11 +79,7 @@ namespace info.sarins.workers.documents.loader
                     Console.WriteLine($"Commit error: {e.Error.Reason}");
                 }
             }
-
-
-
             consumer.Close();
-
         }
     }
 }

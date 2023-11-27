@@ -24,7 +24,7 @@ namespace info.sarins.services.shared.http.requests.models
 
         public string? Description { get; set; }
 
-        public string? FileName { get; }
+        public string? FileName { get; set; }
 
         public string? Website { get; set; }
 

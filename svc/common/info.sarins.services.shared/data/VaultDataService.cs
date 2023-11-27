@@ -46,7 +46,7 @@ namespace info.sarins.services.shared.data
         public async Task<Vault?> UpdateVault(string vaultId, Vault vault)
         {
             var dbFile = await context.Vaults.Where(f => f.Id.Equals(vaultId)).FirstAsync();
-            dbFile.Content = dbFile.ToJson();
+            dbFile.Content = vault.ToJson();
             await context.SaveChangesAsync();
             return vault;
         }

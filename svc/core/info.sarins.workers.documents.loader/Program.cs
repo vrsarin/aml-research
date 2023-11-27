@@ -12,8 +12,6 @@ namespace info.sarins.workers.documents.loader
             IHost host = builder
                 .ConfigureServices(services =>
                 {
-                    services.AddDbContext<VaultDBContext>();
-                    services.AddTransient<IVaultDataService, VaultDataService>();
                     services.AddHostedService<Worker>();
                 })
                 .Build();
