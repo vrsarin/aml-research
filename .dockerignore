@@ -23,3 +23,8 @@
 **/values.dev.yaml
 LICENSE
 README.md
+**/.venv
+**/_pycache_
+**/data
+**/diagrams
+**/documents

@@ -4,6 +4,9 @@ using info.sarins.services.shared.data;
 using info.sarins.services.shared.queues.models;
 using info.sarins.services.shared.storage.models;
 using Newtonsoft.Json;
+using Confluent.SchemaRegistry;
+using Confluent.SchemaRegistry.Serdes;
+
 
 namespace info.sarins.workers.documents.loader
 {
@@ -42,8 +45,19 @@ namespace info.sarins.workers.documents.loader
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var jsonSerializerConfig = new JsonSerializerConfig
+            {
+                BufferBytes = 100
+            };
+
+            var schemaRegistryConfig = new SchemaRegistryConfig
+            {
+                Url = "http://host.docker.internal:8081",
+            };
+
             using var consumer = new ConsumerBuilder<Ignore, string>(kafkaConsumerConfig).Build();
-            using var producer = new ProducerBuilder<string, string>(kafkaProducerConfig).Build();
+            using var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
+            using var producer = new ProducerBuilder<string, ParserKafkaMessage>(kafkaProducerConfig).SetValueSerializer(new JsonSerializer<ParserKafkaMessage>(schemaRegistry, jsonSerializerConfig)).Build();
 
             consumer.Subscribe(kafkaConsumerTopics);
             _logger.LogInformation("Starting Kafka Consumer");
@@ -51,7 +65,12 @@ namespace info.sarins.workers.documents.loader
             {
                 try
                 {
-                    var consumeResult = consumer.Consume(stoppingToken);
+                    var consumeResult = consumer.Consume(200);
+                    if (consumeResult == null || consumeResult.IsPartitionEOF)
+                    {
+                        _logger.LogInformation("waiting...");
+                        continue;
+                    }
                     var message = consumeResult.Message;
                     var eventDetails = JsonConvert.DeserializeObject<MinioEventDetails>(message.Value);
                     /* Update Vault Information
@@ -76,7 +95,6 @@ namespace info.sarins.workers.documents.loader
                             }
                             else
                             {
-
                                 vault.Contents.Add(new services.shared.http.requests.models.Content()
                                 {
                                     ContentId = Guid.NewGuid().ToString(),
@@ -91,20 +109,39 @@ namespace info.sarins.workers.documents.loader
                             }
                         }
 
-                        // Simply extraction from here on
+                        // Simple extraction from here on
                         var producerMessage = new ParserKafkaMessage
                         {
                             BucketName = item.s3.Bucket.Name,
                             FileName = item.s3.Object.key,
+                            ContentType = item.s3.Object.contentType
                         };
-
-                        // Sending message for parser to parse file
-                        await producer.ProduceAsync(kafkaProducerTopic, new Message<string, string>
+                        try
                         {
-                            Key = producerMessage.BucketName,
-                            Value = producerMessage.ToJson(),
+                            if (producerMessage.IsIngestionReady)
+                            {
+                                // Sending message for parser to parse file
+                                await producer.ProduceAsync("ai", new Message<string, ParserKafkaMessage>
+                                {
+                                    Key = producerMessage.BucketName,
+                                    Value = producerMessage,
+                                });
+                            }
+                            //else
+                            //{
+                            //    await producer.ProduceAsync(kafkaProducerTopic, new Message<string, ParserKafkaMessage>
+                            //    {
+                            //        Key = producerMessage.BucketName,
+                            //        Value = producerMessage,
+                            //    });
+                            //}
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(new EventId(), ex, ex.Message);
+                           
+                        }
 
-                        });
 
                         _logger.LogInformation($"Sent message to parsers");
                     }
