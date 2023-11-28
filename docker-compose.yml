@@ -3,14 +3,6 @@
 version: "3.4"
 
 services:
-  # researchuisource:
-  #   image: researchuisource
-  #   build:
-  #     context: ./fe/research-ui
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 4200:4200
-
   graphservice:
     container_name: "graph"
     image: graph
@@ -29,10 +21,11 @@ services:
     build:
       context: ./svc
       dockerfile: external/info.sarins.services.vault/Dockerfile
-    depends_on:
-      - postgreservice
     ports:
       - 8081:80
+    depends_on:
+      - postgreservice
+      - minioservice
 
   loaderservice:
     container_name: "docloader"
@@ -40,66 +33,20 @@ services:
     build:
       context: ./svc
       dockerfile: core/info.sarins.workers.documents.loader/Dockerfile
+    depends_on:
+      - postgreservice
+      - minioservice
 
-  keycloakservice:
-    container_name: "keycloak"
-    image: quay.io/keycloak/keycloak
-    ports:
-      - 8080:8080
-    volumes:
-      - ./.keycloak:/opt/keycloak/data/
-    command: ["start-dev"]
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-
-  ne04jservice:
-    container_name: neo4j
-    image: neo4j
-    ports:
-      - 7474:7474
-      - 7687:7687
-    environment:
-      - NEO4J_AUTH=neo4j/P@ssw0rd
-      - NEO4J_apoc_export_file_enabled=true
-      - NEO4J_apoc_import_file_enabled=true
-      - NEO4J_apoc_import_file_use__neo4j__config=true
-      - NEO4J_PLUGINS=["apoc"]
-    volumes:
-      - ./.neo4j/data:/data
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget --no-verbose --tries=1 --spider localhost:7474 || exit 1",
-        ]
-
-  postgreservice:
-    container_name: postgresql
-    image: postgres
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_DB=amlvaultdb
-      - POSTGRES_USER=amluser
-      - POSTGRES_PASSWORD=P@ssw0rd
-    volumes:
-      - ./.postgres/data:/var/lib/postgresql/data
-
-  minioservice:
-    container_name: minio
-    image: quay.io/minio/minio
-    command: ["minio", "server", "--console-address", ":9090"]
-    ports:
-      - 9000:9000
-      - 9090:9090
-    environment:
-      - MINIO_CONFIG_ENV_FILE=/etc/config.env
-    volumes:
-      - ./.minio/config:/etc/config.env
-      - ./.minio/data:/mnt/data
+  parserservice:
+    container_name: parsers
+    image: parsers
+    build:
+      context: ./workers/parsers
+      dockerfile: Dockerfile
     depends_on:
       - kafka
+      - postgreservice
+      - minioservice
 
   zookeeper:
     image: confluentinc/cp-zookeeper
@@ -136,3 +83,58 @@ services:
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
     depends_on:
       - zookeeper
+
+  minioservice:
+    container_name: minio
+    image: quay.io/minio/minio
+    command: ["minio", "server", "--console-address", ":9090"]
+    ports:
+      - 9000:9000
+      - 9090:9090
+    environment:
+      - MINIO_CONFIG_ENV_FILE=/etc/config.env
+    volumes:
+      - ./.minio/config:/etc/config.env
+      - ./.minio/data:/mnt/data
+    depends_on:
+      - kafka
+      - keycloakservice
+
+  keycloakservice:
+    container_name: "keycloak"
+    image: quay.io/keycloak/keycloak
+    ports:
+      - 8080:8080
+    volumes:
+      - ./.keycloak:/opt/keycloak/data/
+    command: ["start-dev"]
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+
+  ne04jservice:
+    container_name: neo4j
+    image: neo4j
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      - NEO4J_AUTH=neo4j/P@ssw0rd
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_import_file_use__neo4j__config=true
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - ./.neo4j/data:/data
+
+  postgreservice:
+    container_name: postgresql
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=amlvaultdb
+      - POSTGRES_USER=amluser
+      - POSTGRES_PASSWORD=P@ssw0rd
+    volumes:
+      - ./.postgres/data:/var/lib/postgresql/data

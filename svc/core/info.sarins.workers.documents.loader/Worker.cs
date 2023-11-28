@@ -4,9 +4,8 @@ using info.sarins.services.shared.data;
 using info.sarins.services.shared.queues.models;
 using info.sarins.services.shared.storage.models;
 using Newtonsoft.Json;
-using Confluent.SchemaRegistry;
-using Confluent.SchemaRegistry.Serdes;
-
+using System.Text;
+using System.Web;
 
 namespace info.sarins.workers.documents.loader
 {
@@ -45,19 +44,9 @@ namespace info.sarins.workers.documents.loader
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var jsonSerializerConfig = new JsonSerializerConfig
-            {
-                BufferBytes = 100
-            };
-
-            var schemaRegistryConfig = new SchemaRegistryConfig
-            {
-                Url = "http://host.docker.internal:8081",
-            };
-
             using var consumer = new ConsumerBuilder<Ignore, string>(kafkaConsumerConfig).Build();
-            using var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
-            using var producer = new ProducerBuilder<string, ParserKafkaMessage>(kafkaProducerConfig).SetValueSerializer(new JsonSerializer<ParserKafkaMessage>(schemaRegistry, jsonSerializerConfig)).Build();
+           
+            using var producer = new ProducerBuilder<string, string>(kafkaProducerConfig).Build();
 
             consumer.Subscribe(kafkaConsumerTopics);
             _logger.LogInformation("Starting Kafka Consumer");
@@ -73,22 +62,28 @@ namespace info.sarins.workers.documents.loader
                     }
                     var message = consumeResult.Message;
                     var eventDetails = JsonConvert.DeserializeObject<MinioEventDetails>(message.Value);
+                    
+
                     /* Update Vault Information
                      * Decision: Should we call Vault or Simply update DB? currently updating DB directly for speed of implementation.                    
                      */
                     foreach (var item in eventDetails?.Records ?? new List<MinioRecord>())
                     {
-                        _logger.LogInformation($"Recieved message for filename '{item.s3.Object.key}' from bucket '{item.s3.Bucket.Name}'.");
-                        var vault = await vaultService.GetVaultAsync(item.s3.Bucket.Name);
+                        var bucketName = HttpUtility.UrlDecode(item.s3.Bucket.Name);
+                        var fileName = HttpUtility.UrlDecode(item.s3.Object.key,Encoding.UTF8);
+                        var contentType = item.s3.Object.contentType??string.Empty;
+
+                        _logger.LogInformation($"Recieved message for filename '{fileName}' from bucket '{bucketName}'.");
+                        var vault = await vaultService.GetVaultAsync(bucketName);
                         if (vault != null)
                         {
                             if (vault.Contents == null)
                                 vault.Contents = new List<services.shared.http.requests.models.Content>();
 
                             // Currently only ingest added files deleted files should be ignored.
-                            if (vault.Contents.Any(c => c.FileName.Equals(item.s3.Object.key)))
+                            if (vault.Contents.Any(c => c.FileName.Equals(fileName)))
                             {
-                                var content = vault.Contents?.Where(c => c.FileName.Equals(item.s3.Object.key)).First();
+                                var content = vault.Contents?.Where(c => c.FileName.Equals(fileName)).First();
                                 content.Stage = StageTypes.Uploaded;
                                 await vaultService.UpdateVault(vault.VaultId, vault);
                                 _logger.LogInformation($"Vault ({vault.VaultId}) has uploaded content {content.Description}");
@@ -98,9 +93,9 @@ namespace info.sarins.workers.documents.loader
                                 vault.Contents.Add(new services.shared.http.requests.models.Content()
                                 {
                                     ContentId = Guid.NewGuid().ToString(),
-                                    FileName = item.s3.Object.key,
+                                    FileName = fileName,
                                     Source = SourceType.File,
-                                    ContentType = item.s3.Object.contentType,
+                                    ContentType = contentType,
                                     Stage = StageTypes.Uploaded,
 
                                 });
@@ -112,29 +107,24 @@ namespace info.sarins.workers.documents.loader
                         // Simple extraction from here on
                         var producerMessage = new ParserKafkaMessage
                         {
-                            BucketName = item.s3.Bucket.Name,
-                            FileName = item.s3.Object.key,
-                            ContentType = item.s3.Object.contentType
+                            BucketName = bucketName,
+                            FileName = fileName,
+                            ContentType = contentType
                         };
+
                         try
                         {
                             if (producerMessage.IsIngestionReady)
                             {
+                                var valueText= producerMessage.ToJson();
                                 // Sending message for parser to parse file
-                                await producer.ProduceAsync("ai", new Message<string, ParserKafkaMessage>
+                                await producer.ProduceAsync(kafkaProducerTopic, new Message<string, string>
                                 {
                                     Key = producerMessage.BucketName,
-                                    Value = producerMessage,
+                                    Value = valueText,
                                 });
                             }
-                            //else
-                            //{
-                            //    await producer.ProduceAsync(kafkaProducerTopic, new Message<string, ParserKafkaMessage>
-                            //    {
-                            //        Key = producerMessage.BucketName,
-                            //        Value = producerMessage,
-                            //    });
-                            //}
+                           
                         }
                         catch (Exception ex)
                         {

@@ -1,5 +1,5 @@
 # This is required to save the content for forensics
-""" Kafka Consumer for pasing files and sending ti for NER Extraction"""
+""" Kafka Consumer for pasing files and sending it for NER Extraction"""
 from confluent_kafka import Consumer, KafkaError, KafkaException
 from document_processor import process_document
 
@@ -12,6 +12,7 @@ conf = {'bootstrap.servers': 'host.docker.internal:29092',
 consumer = Consumer(conf)
 try:
     # TODO: should come from environment variables
+    print("Subscribing to topic 'documents")
     consumer.subscribe(["documents"])
     # TODO: change this to better pattern
     PROCESS_RUNNING = True

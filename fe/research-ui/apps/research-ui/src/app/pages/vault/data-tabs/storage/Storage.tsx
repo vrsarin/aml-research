@@ -100,7 +100,6 @@ export function Storage(props: StorageProps) {
               .put('', file, {
                 headers: {
                   'Content-Type': file.type,
-                  'Content-Encoding': file.length,
                   'acquired-from': 'upload',
                 },
               })
