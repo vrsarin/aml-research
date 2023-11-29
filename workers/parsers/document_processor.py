@@ -21,9 +21,9 @@ client = Minio("host.docker.internal:9000",
 
 def save_text(bucket_name: str, file_name: str, content: bytes | str):
     """Save file to minio for ingestion"""
-    new_file_name = Path(file_name).stem
+    new_file_name = "parsed/" + Path(file_name).stem + ".txt"
     client.put_object(bucket_name=bucket_name,
-                      object_name=new_file_name + ".txt",
+                      object_name=new_file_name,
                       data=io.BytesIO(content),
                       length=content.length,
                       metadata={
