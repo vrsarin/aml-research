@@ -81,23 +81,23 @@ export function Vault() {
         aria-label="basic tabs example"
       >
         <Tab label="General" {...a11yProps(0)} />
+        <Tab label="Case Summary **" {...a11yProps(2)} />
         <Tab label="Files" {...a11yProps(0)} />
         <Tab label="Entities" {...a11yProps(1)} />
         {/* <Tab label="Relationship" {...a11yProps(2)} /> */}
         <Tab label="Linked Cases **" {...a11yProps(2)} />
         <Tab label="Analysis" {...a11yProps(2)} />
         <Tab label="Report" {...a11yProps(2)} />
-        <Tab label="Case Summary **" {...a11yProps(2)} />
       </Tabs>
 
       <CustomTabPanel value={value} index={0}>
         <GeneralTab identifier={id} />
       </CustomTabPanel>
-      <CustomTabPanel value={value} index={1}>
+      <CustomTabPanel value={value} index={2}>
         <Storage identifier={id} />
       </CustomTabPanel>
-      <CustomTabPanel value={value} index={2}>
-        <Nodes entities={entities} identifier={id} />
+      <CustomTabPanel value={value} index={3}>
+        <Nodes vaultid={id} />
       </CustomTabPanel>
     </Stack>
   );

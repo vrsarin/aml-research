@@ -1,10 +1,10 @@
 import { render } from '@testing-library/react';
 
-import CategoryList from './CategoryList';
+import MergeEntities from './MergeEntities';
 
-describe('CategoryList', () => {
+describe('MergeEntities', () => {
   it('should render successfully', () => {
-    const { baseElement } = render(<CategoryList />);
+    const { baseElement } = render(<MergeEntities />);
     expect(baseElement).toBeTruthy();
   });
 });

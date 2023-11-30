@@ -41,9 +41,11 @@ export function Storage(props: StorageProps) {
   });
 
   useEffect(() => {
-    getMinioCredentials(() => {
-      getFileList();
-    });
+    if (bucketFiles.length <= 0) {
+      getMinioCredentials(() => {
+        getFileList();
+      });
+    }
   }, []);
 
   const [addNote, setAddNote] = useState(false);
@@ -155,8 +157,8 @@ export function Storage(props: StorageProps) {
   function getFileList() {
     const files = minioclient.listObjectsV2(props.identifier);
     files.on('data', function (obj) {
-      const found = bucketFiles.filter((r) => r.name === obj.name);
-      if (found.length <= 0) {
+      const found = bucketFiles.findIndex((r) => r.name === obj.name);
+      if (found < 0) {
         setBucketFiles((f) => {
           return [...f, obj];
         });
