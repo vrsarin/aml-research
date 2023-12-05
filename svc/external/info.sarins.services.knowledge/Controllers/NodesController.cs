@@ -4,7 +4,7 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace info.sarins.services.knowledge.Controllers
 {
-    [Route("case-files/{identifier}/knowledge/graph")]
+    [Route("{vaultId}/graph")]
     [ApiController]
     public class NodesController : ControllerBase
     {
@@ -17,67 +17,53 @@ namespace info.sarins.services.knowledge.Controllers
             this.neo4JDB = neo4JDB;
         }
 
-
-        [HttpGet]
-        [SwaggerOperation(Summary = "Get all nodes",
-          Description = "Requires admin privileges",
-          OperationId = "GetAllCases",
-          Tags = new[] { "Nodes" }
-          )]
-        public async Task<IActionResult> GetAllNodes(long identifier)
+        [HttpGet("nodes")]
+        [Tags("Nodes")]
+        public async Task<IActionResult> GetNodes(string vaultId,bool includeProperties=false)
         {
-            var labels = await neo4JDB.GetNodesWithProperties();
-
+            var labels = await neo4JDB.GetNodes(includeProperties);
             return Ok(labels);
         }
 
+        [HttpGet("nodes/{nodeid}")]
+        [Tags("Nodes")]
+        public async Task<IActionResult> GetNodes(string vaultId, string nodeid)
+        {
+            throw new NotImplementedException();
+        }
+
+        [HttpGet("nodes/{nodeid}/relations")]
+        [Tags("Nodes")]
+        public async Task<IActionResult> GetNodeRelations(string vaultId, string nodeid, bool includeRelations = true, int depth = 1)
+        {
+            throw new NotImplementedException();
+        }
+
         [HttpGet("labels")]
-        [SwaggerOperation(Summary = "Get all labels",
-          Description = "Requires admin privileges",
-          OperationId = "GetAllCases",
-          Tags = new[] { "Labels" }
-          )]
-        public async Task<IActionResult> GetAllLabels(long identifier)
+        [Tags("Labels")]
+        public async Task<IActionResult> GetAllLabels(string vaultId)
         {
 
             var labels = await this.neo4JDB.GetNodeLabels();
             return Ok(labels);
         }
 
-        [HttpGet("{label}")]
-        [SwaggerOperation(Summary = "Get all nodes for a given label",
-           Description = "Requires admin privileges",
-           OperationId = "GetAllCases",
-           Tags = new[] { "Nodes" }
-           )]
-        public async Task<IActionResult> GetNodes(long identifier, string label)
+       
+
+        [HttpGet("labels/{label}/nodes")]
+        [Tags("Labels")]
+        public async Task<IActionResult> GetLabelNodes(string vaultId, string label)
         {
             var labels = await neo4JDB.GetNodesWithProperties(label);
             return Ok(labels);
         }
 
-        [HttpGet("entities/{entityId}/relations")]
-        [SwaggerOperation(Summary = "Get all relationship of a given entity",
-           Description = "Requires admin privileges",
-           OperationId = "GetAllCases",
-           Tags = new[] { "Nodes" }
-           )]
-        public IActionResult GetEntityRelations(long identifier, long entity_id)
+        [HttpGet("labels/{label}/nodes/{nodeid}/relations")]
+        [Tags("Labels")]
+        public async Task<IActionResult> GetEntityRelations(string vaultId, string label, string nodeid, bool includeRelations=true,int depth=1)
         {
-            return Ok();
-        }
-        [HttpGet("relations")]
-        [SwaggerOperation(Summary = "Get all relationship of an entity",
-           Description = "Requires admin privileges",
-           OperationId = "GetAllCases",
-           Tags = new[] { "Relations" }
-           )]
-        public IActionResult GetAllRelations(long identifier)
-        {
-            return Ok();
-        }
-
-
-
+            var labels = await neo4JDB.GetRelations(label, nodeid, includeRelations, depth);
+            return Ok(labels);
+        }        
     }
 }

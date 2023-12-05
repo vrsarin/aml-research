@@ -12,41 +12,15 @@ import {
 import Home from './pages/home/Home';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import Vault from './pages/vault/Vault';
-import Keycloak from 'keycloak-js';
 import { MouseEvent } from 'react';
 import MenuIcon from '@mui/icons-material/Menu';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
+import UserService from 'apps/research-ui//src/app/services/user-service';
 
 export interface PortalProps {}
 
 const defaultTheme = createTheme();
-const keycloak = new Keycloak({
-  url: 'http://localhost:8080',
-  realm: 'aml',
-  clientId: 'aml',
-});
-
-const authenticated = await keycloak.init({
-  onLoad: 'check-sso',
-  checkLoginIframe: true,
-  pkceMethod: 'S256',
-  // enableLogging: true,
-  // silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
-  // redirectUri: window.location.origin,
-  flow: 'implicit',
-});
-
-// if (!authenticated) {
-//   keycloak.login();
-// } else {
-//   let resultant = await keycloak.loadUserInfo();
-// }
-
-if (authenticated) {
-  sessionStorage.setItem('access_token', keycloak.token ?? '');
-  sessionStorage.setItem('id_token', keycloak.idToken ?? '');
-}
 
 export function Portal(props: PortalProps) {
   const navigate = useNavigate();
@@ -55,11 +29,11 @@ export function Portal(props: PortalProps) {
   }
 
   function handleLogin(event: MouseEvent<HTMLButtonElement>): void {
-    keycloak.login();
+    UserService.doLogin();
   }
 
   function handleLogout(event: MouseEvent<HTMLButtonElement>): void {
-    keycloak.logout();
+    UserService.doLogout();
   }
 
   return (
@@ -93,9 +67,9 @@ export function Portal(props: PortalProps) {
                   sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}
                 ></Typography>
                 <Typography noWrap component="div">
-                  {keycloak.authenticated ? (
+                  {UserService.isLoggedIn() ? (
                     <Typography>
-                      Welcome back: {keycloak.idTokenParsed?.name ?? ''}{' '}
+                      Welcome back: {UserService.getUsername()}
                       <Button
                         variant="contained"
                         endIcon={<LogoutIcon />}
@@ -117,14 +91,12 @@ export function Portal(props: PortalProps) {
               </Toolbar>
             </AppBar>
           </Box>
-          <Box display={authenticated ? '' : 'none'}>
-            <Container>
-              <Routes>
-                <Route path="/" Component={Home} />
-                <Route path="/vault" Component={Vault} />
-              </Routes>
-            </Container>
-          </Box>
+          <Container>
+            <Routes>
+              <Route path="/" Component={Home} />
+              <Route path="/vault" Component={Vault} />
+            </Routes>
+          </Container>
         </Box>
       </ThemeProvider>
     </Box>

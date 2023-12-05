@@ -1,4 +1,5 @@
 export interface EntityModel {
+  elementId: string;
   id: string;
   labels: string[];
   attributes: KeyValuePair[];

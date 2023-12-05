@@ -1,10 +1,10 @@
 import { render } from '@testing-library/react';
 
-import CategoryList from './CategoryList';
+import Analysis from './Analysis';
 
-describe('CategoryList', () => {
+describe('Analysis', () => {
   it('should render successfully', () => {
-    const { baseElement } = render(<CategoryList />);
+    const { baseElement } = render(<Analysis />);
     expect(baseElement).toBeTruthy();
   });
 });

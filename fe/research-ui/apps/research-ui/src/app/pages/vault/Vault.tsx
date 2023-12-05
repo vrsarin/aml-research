@@ -7,6 +7,9 @@ import { EntityModel } from '../../models/Entity.Model';
 import Nodes from './data-tabs/nodes/Nodes';
 import { environment } from 'apps/research-ui/src/environments/environment';
 import Storage from './data-tabs/storage/Storage';
+import Analysis from './data-tabs/analysis/Analysis';
+import Summary from './data-tabs/summary/Summary';
+import Report from './data-tabs/report/Report';
 
 const client = axios.create({
   baseURL: environment.VAULT_URL,
@@ -54,7 +57,8 @@ export function Vault() {
 
   const initialState: EntityModel[] = [];
 
-  const [entities, setEntities] = useState(initialState);
+  const [, setEntities] = useState(initialState);
+
   useEffect(() => {
     getCaseFile(id);
   }, [id]);
@@ -81,23 +85,32 @@ export function Vault() {
         aria-label="basic tabs example"
       >
         <Tab label="General" {...a11yProps(0)} />
+        <Tab label="Case Summary **" {...a11yProps(2)} />
         <Tab label="Files" {...a11yProps(0)} />
         <Tab label="Entities" {...a11yProps(1)} />
         {/* <Tab label="Relationship" {...a11yProps(2)} /> */}
         <Tab label="Linked Cases **" {...a11yProps(2)} />
         <Tab label="Analysis" {...a11yProps(2)} />
         <Tab label="Report" {...a11yProps(2)} />
-        <Tab label="Case Summary **" {...a11yProps(2)} />
       </Tabs>
 
       <CustomTabPanel value={value} index={0}>
         <GeneralTab identifier={id} />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={1}>
-        <Storage identifier={id} />
+        <Summary />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={2}>
-        <Nodes entities={entities} identifier={id} />
+        <Storage identifier={id} />
+      </CustomTabPanel>
+      <CustomTabPanel value={value} index={3}>
+        <Nodes vaultid={id} />
+      </CustomTabPanel>
+      <CustomTabPanel value={value} index={5}>
+        <Analysis />
+      </CustomTabPanel>
+      <CustomTabPanel value={value} index={6}>
+        <Report />
       </CustomTabPanel>
     </Stack>
   );
