@@ -1,6 +1,6 @@
-
-using info.sarins.services.vault.Data;
-using info.sarins.services.vault.Data.Services;
+using info.sarins.services.shared.data;
+using info.sarins.services.shared.storage;
+using Minio;
 using System.Text.Json.Serialization;
 
 namespace info.sarins.services.vault
@@ -10,6 +10,16 @@ namespace info.sarins.services.vault
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            var config = builder.Configuration;
+
+            builder.Services.AddMinio(o => o
+                .WithEndpoint(config.GetValue<string>("minio:host"))
+                .WithCredentials(config.GetValue<string>("minio:accessKey"),
+                        config.GetValue<string>("minio:secretKey"))
+                .WithSSL(false)
+                    , ServiceLifetime.Singleton);
+
             builder.Services.AddCors(op =>
             {
                 op.AddPolicy("CorsPolicy", policy =>
@@ -19,7 +29,7 @@ namespace info.sarins.services.vault
             });
             // Add services to the container
             builder.Services
-                .AddControllers()
+                .AddControllers()               
                 .AddJsonOptions(o =>
                 {
                     o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -30,7 +40,8 @@ namespace info.sarins.services.vault
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c => { c.EnableAnnotations(); });
-            builder.Services.AddTransient<ICasefileDataService, CasefileDataService>();
+            builder.Services.AddTransient<IVaultDataService, VaultDataService>();
+            builder.Services.AddTransient<IStorageRespository, StorageRespository>();
 
 
             var app = builder.Build();

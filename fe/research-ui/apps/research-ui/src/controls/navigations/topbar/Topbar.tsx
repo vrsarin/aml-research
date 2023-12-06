@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { styled, alpha } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -9,7 +8,7 @@ import InputBase from '@mui/material/InputBase';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import Link from '@mui/material/Link';
-import { Container, Divider } from '@mui/material';
+import { Container } from '@mui/material';
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',

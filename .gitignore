@@ -2,3 +2,11 @@
 **/.vs
 **/bin
 **/obj
+**/.neo4j
+**/.postgres
+**/.minio/data
+**/.venv
+**/__pycache__
+**/.keycloak
+**/data
+**/.env

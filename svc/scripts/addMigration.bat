@@ -1,0 +1,1 @@
+dotnet ef migrations add --startup-project ../external/info.sarins.services.vault/info.sarins.services.vault.csproj -c vaultdbcontext -p ../common/info.sarins.services.shared/info.sarins.services.shared.csproj v1

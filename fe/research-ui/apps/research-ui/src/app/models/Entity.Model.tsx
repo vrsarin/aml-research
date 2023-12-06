@@ -1,11 +1,11 @@
 export interface EntityModel {
+  elementId: string;
   id: string;
-  types: string[];
+  labels: string[];
   attributes: KeyValuePair[];
 }
 
 export interface KeyValuePair {
-  key: string;  
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  value: any|undefined;
+  key: string;
+  value: any | undefined;
 }

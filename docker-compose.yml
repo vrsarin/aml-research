@@ -1,0 +1,151 @@
+# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP.NET Core service.
+
+version: "3.4"
+
+services:
+  graphservice:
+    container_name: "graph"
+    image: graph
+    build:
+      context: ./svc
+      dockerfile: external/info.sarins.services.knowledge/Dockerfile
+    depends_on:
+      - neo4jservice
+
+    ports:
+      - 8082:80
+
+  vaultservice:
+    container_name: "vault"
+    image: vault
+    build:
+      context: ./svc
+      dockerfile: external/info.sarins.services.vault/Dockerfile
+    ports:
+      - 8081:80
+    depends_on:
+      - postgreservice
+      - minioservice
+
+  loaderservice:
+    container_name: "docloader"
+    image: docloader
+    build:
+      context: ./svc
+      dockerfile: core/info.sarins.workers.documents.loader/Dockerfile
+    depends_on:
+      - postgreservice
+      - minioservice
+
+  parserservice:
+    container_name: parsers
+    image: parsers
+    build:
+      context: ./workers/parsers
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+      - postgreservice
+      - minioservice
+
+  ingestionservice:
+    container_name: ingestion
+    image: ingestion
+    build:
+      context: ./workers/ingestion
+      dockerfile: Dockerfile
+    depends_on:
+      - kafka
+      - minioservice
+      - neo4jservice
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_SERVERS: zookeeper:2888:3888
+
+  kafka:
+    image: confluentinc/cp-kafka
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+      - "9999:9999"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:19092,EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092,DOCKER://host.docker.internal:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: ${DOCKER_HOST_IP:-127.0.0.1}
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+    depends_on:
+      - zookeeper
+
+  minioservice:
+    container_name: minio
+    image: quay.io/minio/minio
+    command: ["minio", "server", "--console-address", ":9090"]
+    ports:
+      - 9000:9000
+      - 9090:9090
+    environment:
+      - MINIO_CONFIG_ENV_FILE=/etc/config.env
+    volumes:
+      - ./.minio/config:/etc/config.env
+      - ./.minio/data:/mnt/data
+    depends_on:
+      - kafka
+      - keycloakservice
+
+  keycloakservice:
+    container_name: "keycloak"
+    image: quay.io/keycloak/keycloak
+    ports:
+      - 8080:8080
+    volumes:
+      - ./.keycloak:/opt/keycloak/data/
+    command: ["start-dev"]
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+
+  neo4jservice:
+    container_name: neo4j
+    image: neo4j
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      - NEO4J_AUTH=neo4j/P@ssw0rd
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_import_file_use__neo4j__config=true
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      - ./.neo4j/data:/data
+
+  postgreservice:
+    container_name: postgresql
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=amlvaultdb
+      - POSTGRES_USER=amluser
+      - POSTGRES_PASSWORD=P@ssw0rd
+    volumes:
+      - ./.postgres/data:/var/lib/postgresql/data

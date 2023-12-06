@@ -1,97 +1,104 @@
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import {
   Box,
-  Button,
+  Chip,
   Divider,
+  Fab,
+  Grid,
+  IconButton,
+  MenuItem,
+  OutlinedInput,
+  Paper,
+  Select,
+  SelectChangeEvent,
+  Stack,
   TextField,
+  Theme,
+  Typography,
+  useTheme,
 } from '@mui/material';
-import { CaseFileModel } from 'apps/research-ui/src/app/models/CaseFile.Model';
-import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { styled } from '@mui/material/styles';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import SavedSearchIcon from '@mui/icons-material/SavedSearch';
-import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
-
-const columns: GridColDef[] = [
-  { field: 'id', headerName: 'ID', width: 90 },
-  {
-    field: 'firstName',
-    headerName: 'First name',
-    width: 150,
-    editable: true,
+import {
+  CaseFileModel,
+  CaseStatus,
+} from 'apps/research-ui/src/app/models/Vault.Model';
+import { environment } from 'apps/research-ui/src/environments/environment';
+import AddIcon from '@mui/icons-material/Add';
+import SaveIcon from '@mui/icons-material/Save';
+import DeleteIcon from '@mui/icons-material/Delete';
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 250,
+    },
   },
-  {
-    field: 'lastName',
-    headerName: 'Last name',
-    width: 150,
-    editable: true,
-  },
-  {
-    field: 'age',
-    headerName: 'Age',
-    type: 'number',
-    width: 110,
-    editable: true,
-  },
-  {
-    field: 'fullName',
-    headerName: 'Full name',
-    description: 'This column has a value getter and is not sortable.',
-    sortable: false,
-    width: 160,
-    valueGetter: (params: GridValueGetterParams) =>
-      `${params.row.firstName || ''} ${params.row.lastName || ''}`,
-  },
-];
-const rows = [
-  { id: 1, lastName: 'Snow', firstName: 'Jon', age: 35 },
-  { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 42 },
-  { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 45 },
-  { id: 4, lastName: 'Stark', firstName: 'Arya', age: 16 },
-  { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
-  { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
-  { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
-  { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
-  { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
-];
-
+};
 const client = axios.create({
-  baseURL: 'http://host.docker.internal:8081/case-files',
+  baseURL: environment.VAULT_URL,
 });
+const names = [
+  'Taxonomy 1',
+  'Taxonomy 2',
+  'Taxonomy 3',
+  'Taxonomy 4',
+  'Taxonomy 5',
+  'Taxonomy 6',
+  'Taxonomy 7',
+  'Taxonomy 8',
+  'Taxonomy 9',
+  'Taxonomy 10',
+];
+
+function getStyles(name: string, personName: readonly string[], theme: Theme) {
+  return {
+    fontWeight:
+      personName.indexOf(name) === -1
+        ? theme.typography.fontWeightRegular
+        : theme.typography.fontWeightMedium,
+  };
+}
+
 export interface GeneralTabProps {
   identifier: string;
 }
-const VisuallyHiddenInput = styled('input')({
-  clip: 'rect(0 0 0 0)',
-  clipPath: 'inset(50%)',
-  height: 1,
-  overflow: 'hidden',
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  whiteSpace: 'nowrap',
-  width: 1,
-});
 
 export function GeneralTab(props: GeneralTabProps) {
   const initialState: CaseFileModel = {
-    identifier: 0,
-    caseStatus: '',
+    vaultId: '',
+    status: CaseStatus.Open,
     name: '',
     description: '',
   };
+  const theme = useTheme();
   const [caseFile, setCaseFile] = useState(initialState);
+
+  const [personName, setPersonName] = useState<string[]>([
+    'Taxonomy 1',
+    'Taxonomy 2',
+  ]);
+
+  const handleChange = (event: SelectChangeEvent<typeof personName>) => {
+    const {
+      target: { value },
+    } = event;
+    setPersonName(
+      // On autofill we get a stringified value.
+      typeof value === 'string' ? value.split(',') : value
+    );
+  };
 
   useEffect(() => {
     if (props.identifier) {
-      getCaseFile();
+      getCaseFile(props.identifier);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.identifier]);
 
-  function getCaseFile(): void {
+  function getCaseFile(id: string): void {
     client
-      .get(`${props.identifier}`)
+      .get(id)
       .then((response) => {
         const file = response.data;
         setCaseFile(file);
@@ -101,14 +108,14 @@ export function GeneralTab(props: GeneralTabProps) {
       });
   }
 
+  function handleDelete(event: any): void {
+    alert('deleted');
+  }
+
   return (
     <Box paddingBottom={0.5}>
-      <Box width={1} padding={1}>
-        <TextField
-          label="Case Identifier"
-          value={caseFile.identifier}
-          disabled
-        />
+      <Box padding={2}>
+        <Typography>Case #: {caseFile.vaultId}</Typography>
       </Box>
       <Box padding={1}>
         <TextField
@@ -116,7 +123,7 @@ export function GeneralTab(props: GeneralTabProps) {
           value={caseFile.name}
           sx={{ minWidth: '200px;' }}
           fullWidth
-          disabled
+          variant="filled"
         />
       </Box>
       <Box padding={1}>
@@ -124,34 +131,138 @@ export function GeneralTab(props: GeneralTabProps) {
           label="Short Description"
           value={caseFile.description}
           fullWidth
-          disabled
+          variant="filled"
         />
       </Box>
-      <Box>
-        <Button component="label" startIcon={<CloudUploadIcon />}>
-          Upload file
-          <VisuallyHiddenInput type="file" />
-        </Button>
-        <Button>
-          <SavedSearchIcon />
-          Add Web Crawler
-        </Button>
-      </Box>
-      <Divider />
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        initialState={{
-          pagination: {
-            paginationModel: {
-              pageSize: 5,
-            },
-          },
+      <Divider textAlign="left">Taxonomy</Divider>
+      <Grid
+        container
+        sx={{
+          paddingTop: '5px;',
+          paddingBottom: '5px;',
+          paddingRight: '20px;',
         }}
-        pageSizeOptions={[5]}
-        checkboxSelection
-        disableRowSelectionOnClick
-      />
+      >
+        <Grid item xs>
+          <Select
+            labelId="demo-multiple-chip-label"
+            id="demo-multiple-chip"
+            label="Taxonomy"
+            multiple
+            sx={{ minWidth: '250px;' }}
+            fullWidth
+            value={personName}
+            onChange={handleChange}
+            input={<OutlinedInput id="select-multiple-chip" label="Taxonomy" />}
+            renderValue={(selected) => (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {selected.map((value) => (
+                  <Chip key={value} label={value} onDelete={handleDelete} />
+                ))}
+              </Box>
+            )}
+            MenuProps={MenuProps}
+          >
+            {names.map((name) => (
+              <MenuItem
+                key={name}
+                value={name}
+                style={getStyles(name, personName, theme)}
+              >
+                {name}
+              </MenuItem>
+            ))}
+          </Select>
+        </Grid>
+        <Grid item sx={{ paddingLeft: '25px;' }}>
+          <Fab size="small" color="primary" aria-label="add">
+            <AddIcon />
+          </Fab>
+        </Grid>
+      </Grid>
+
+      <Divider textAlign="left">Tags</Divider>
+      <Box
+        flexDirection={'row'}
+        alignItems={'flex-end'}
+        alignContent={'flex-end'}
+        textAlign={'end'}
+      >
+        <Stack>
+          <Grid container>
+            <Grid item xs={4} textAlign={'center'}>
+              <Paper sx={{ backgroundColor: 'lightslategray', color: 'white' }}>
+                Key
+              </Paper>
+            </Grid>
+            <Grid item xs textAlign={'center'}>
+              <Paper sx={{ backgroundColor: 'lightslategray', color: 'white' }}>
+                Value
+              </Paper>
+            </Grid>
+          </Grid>
+          <Grid container>
+            <Grid item xs={4} textAlign={'center'}>
+              <TextField variant="filled" fullWidth value={'Tag1'} />
+            </Grid>
+            <Grid item xs textAlign={'center'}>
+              <TextField variant="filled" fullWidth value={'Tag Value1'} />
+            </Grid>
+            <Grid
+              item
+              textAlign={'center'}
+              alignItems={'center'}
+              alignContent={'center'}
+            >
+              <IconButton color="primary" aria-label="Save">
+                <SaveIcon />
+              </IconButton>
+              <IconButton color="primary" aria-label="Delete">
+                <DeleteIcon />
+              </IconButton>
+            </Grid>
+          </Grid>
+          <Grid container>
+            <Grid item xs={4} textAlign={'center'}>
+              <TextField variant="filled" fullWidth value={'Tag2'} />
+            </Grid>
+            <Grid item xs textAlign={'center'}>
+              <TextField variant="filled" fullWidth value={'Tag Value2'} />
+            </Grid>
+            <Grid
+              item
+              textAlign={'center'}
+              alignItems={'center'}
+              alignContent={'center'}
+            >
+              <IconButton color="primary" aria-label="Save">
+                <SaveIcon />
+              </IconButton>
+              <IconButton color="primary" aria-label="Delete">
+                <DeleteIcon />
+              </IconButton>
+            </Grid>
+          </Grid>
+          <Grid container>
+            <Grid item xs={4} textAlign={'center'}>
+              <TextField fullWidth variant="standard" />
+            </Grid>
+            <Grid item xs textAlign={'center'}>
+              <TextField fullWidth variant="standard" />
+            </Grid>
+            <Grid
+              item
+              textAlign={'center'}
+              alignItems={'center'}
+              alignContent={'center'}
+            >
+              <IconButton color="primary" aria-label="Save">
+                <SaveIcon />
+              </IconButton>
+            </Grid>
+          </Grid>
+        </Stack>
+      </Box>
     </Box>
   );
 }

@@ -1,26 +1,36 @@
 ﻿using Neo4j.Driver;
-using System;
-using System.Collections;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
+using System.Data.Common;
 
 namespace info.sarins.services.knowledge.Data
 {
-    public interface INeo4JDB : IDisposable
+    public interface INeo4JDB
     {
+        void Dispose();
         Task<List<string>> GetNodeLabels();
-        
+        Task<List<Entity>> GetNodesWithProperties();
         Task<List<Entity>> GetNodesWithProperties(string label);
+        Task<List<Entity>> GetNodes(bool includeProperties);
+        Task<List<Relation>> GetRelations(string label, string entityId, bool includeRelations, int depth);
     }
 
-
-    public class Neo4JDB : INeo4JDB
+    internal class Neo4JDB : INeo4JDB
     {
         private readonly IDriver driver;
+        private readonly IConfiguration configuration;
 
-        public Neo4JDB()
+        public Neo4JDB(IConfiguration configuration)
         {
-            this.driver = GraphDatabase.Driver("neo4j://host.docker.internal:7687", AuthTokens.Basic("neo4j", "Tiger!@1"));
+            this.configuration = configuration;
+
+            this.driver = GraphDatabase.Driver(
+                $"neo4j://{configuration.GetValue<string>("neo4j:host")}:{configuration.GetValue<string>("neo4j:port")}",
+                AuthTokens.Basic(configuration.GetValue<string>("neo4j:userName"),
+                    configuration.GetValue<string>("neo4j:password")));
+        }
+
+        public void Dispose()
+        {
+            this.driver.Dispose();
         }
 
         public async Task<List<string>> GetNodeLabels()
@@ -28,8 +38,7 @@ namespace info.sarins.services.knowledge.Data
             using var session = this.driver.AsyncSession();
             var labels = await session.ExecuteReadAsync(async tx =>
             {
-                var result = await tx.RunAsync(@"use dev
-CALL apoc.meta.data()
+                var result = await tx.RunAsync(@"CALL apoc.meta.data()
 YIELD label, other, elementType, type
 WHERE elementType = ""node""
 RETURN COLLECT(distinct label) as labels");
@@ -41,54 +50,101 @@ RETURN COLLECT(distinct label) as labels");
             return result;
         }
 
-//        private async Task<List<string>> GetNodes(string label)
-//        {
-//            using var session = this.driver.AsyncSession();
-//            var labels = await session.ExecuteReadAsync(async tx =>
-//            {
-//                var query = $@"use dev
-//MATCH (n:{label}) RETURN n.name as entities";
-//                var result = await tx.RunAsync(query);
-
-//                return await result.ToListAsync();
-//            });
-//            List<string> returnValues = new();
-//            labels.ForEach(l => returnValues.Add(l.Values["entities"].As<string>()));
-//            returnValues.Sort();
-//            return returnValues.Where(r => !string.IsNullOrEmpty(r)).ToList<string>();
-//        }
-
         public async Task<List<Entity>> GetNodesWithProperties(string label)
         {
             using var session = this.driver.AsyncSession();
             var labels = await session.ExecuteReadAsync(async tx =>
             {
-                var query = $@"use dev
-MATCH (n:{label}) RETURN n as entities";
+                var query = $@"MATCH (n:{label}) RETURN n as entities";
                 var result = await tx.RunAsync(query);
 
                 return await result.ToListAsync();
             });
-            List<Entity> returnValues = new();          
-            labels.ForEach(r => returnValues.Add(ExtractEntity((INode)r.Values["entities"])));            ;
+            List<Entity> returnValues = new();
+            labels.ForEach(r => returnValues.Add(ExtractEntity((INode)r.Values["entities"]))); ;
             return returnValues.OrderBy(x => x.Id).ToList();
         }
 
-        private Entity ExtractEntity(INode record)
+        public async Task<List<Entity>> GetNodesWithProperties()
         {
-            var entity = new Entity {
-                Id = record.Properties["id"]?.ToString()??string.Empty,                
+            using var session = this.driver.AsyncSession();
+            var labels = await session.ExecuteReadAsync(async tx =>
+            {
+                var query = $@"MATCH (n) RETURN n as entities";
+                var result = await tx.RunAsync(query);
+
+                return await result.ToListAsync();
+            });
+            List<Entity> returnValues = new();
+            labels.ForEach(r => returnValues.Add(ExtractEntity((INode)r.Values["entities"]))); ;
+            return returnValues.OrderBy(x => x.Id).ToList();
+
+        }
+
+        public async Task<List<Entity>> GetNodes(bool includeProperties)
+        {
+            using var session = this.driver.AsyncSession();
+            var labels = await session.ExecuteReadAsync(async tx =>
+            {
+                var query = $@"MATCH (n) RETURN n as entities";
+                var result = await tx.RunAsync(query);
+
+                return await result.ToListAsync();
+            });
+            List<Entity> returnValues = new();
+            labels.ForEach(r => returnValues.Add(ExtractEntity((INode)r.Values["entities"], includeProperties: includeProperties))); ;
+            return returnValues.OrderBy(x => x.Id).ToList();
+        }
+
+        public async Task<List<Relation>> GetRelations(string label, string entityId, bool includeRelations, int depth)
+        {
+            using var session = this.driver.AsyncSession();
+            var labels = await session.ExecuteReadAsync(async tx =>
+            {
+                var query = $"MATCH (n:{label} {{id: '{entityId}'}})-[r*1..{depth}]-() return r as relations";
+                var result = await tx.RunAsync(query);
+
+                return await result.ToListAsync();
+            });
+            List<Relation> returnValues = new();
+            labels.ForEach(r => returnValues.AddRange(ExtractRelations(r)));
+
+            return returnValues.Distinct(new RelationEqualityComparer()).OrderBy(x => x.Identifier).ToList();
+        }
+
+        private Entity ExtractEntity(INode record, bool includeLabels = true, bool includeProperties = true)
+        {
+            var entity = new Entity
+            {
+                ElementId = record.ElementId,
+                Id = record.Properties["id"]?.ToString() ?? string.Empty,
             };
-            entity.Types.AddRange(record.Labels.ToList<string>());
-            entity.Attributes?.AddRange( record.Properties.Where(p => !p.Key.Equals("id"))) ;
+
+            entity.Labels.AddRange(record.Labels.ToList<string>());
+            if (includeProperties)
+                entity.Attributes?.AddRange(record.Properties.Where(p => !p.Key.Equals("id")));
+
             return entity;
         }
 
-       
-
-        public void Dispose()
+        private List<Relation> ExtractRelations(IRecord record)
         {
-            this.driver.Dispose();
+            var result = new List<Relation>();
+            foreach (var item in record.Values)
+            {
+                foreach (IRelationship relationship in (List<object>)item.Value)
+                {
+                    result.Add(new Relation
+                    {
+                        DestinationElementId = relationship.EndNodeElementId,
+                        SourceElementId = relationship.StartNodeElementId,
+                        RelationType = relationship.Type,
+                        Identifier = relationship.ElementId
+                    });
+                }
+            }
+
+            return result;
         }
     }
 }
