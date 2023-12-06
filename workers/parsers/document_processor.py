@@ -28,6 +28,7 @@ def save_text(bucket_name: str, file_name: str, content: str):
                       data=io.BytesIO(encoded_value),
                       length=len(encoded_value),
                       content_type='text/plain',
+
                       metadata={
                           "parent-file": file_name}
                       )

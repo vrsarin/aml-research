@@ -18,9 +18,6 @@ import AddLinkIcon from '@mui/icons-material/AddLink';
 import { environment } from 'apps/research-ui/src/environments/environment';
 import UserService from 'apps/research-ui/src/app/services/user-service';
 
-const http_client = axios.create({
-  baseURL: environment.MINIO_URL,
-});
 export interface StorageProps {
   identifier: string;
 }
@@ -49,6 +46,11 @@ export function Storage(props: StorageProps) {
     secretAccessKey: '',
     sessionToken: '',
   };
+
+  const http_client = axios.create({
+    baseURL: environment.MINIO_URL,
+  });
+
   const [addNote, setAddNote] = useState(false);
   const [bucketFiles, setBucketFiles] = useState(initialFileList);
   const [showProgress, setProgress] = useState('none');

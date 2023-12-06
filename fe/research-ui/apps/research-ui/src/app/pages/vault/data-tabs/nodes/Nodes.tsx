@@ -104,6 +104,7 @@ export function Nodes(props: NodedProperties) {
       })
       .catch((response) => alert(response));
   }
+
   function handleGraphShow(
     event: ChangeEvent<HTMLInputElement>,
     checked: boolean
