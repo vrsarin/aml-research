@@ -15,8 +15,12 @@ import AddNote from './actions/add-notes/AddNote';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import NoteAddIcon from '@mui/icons-material/NoteAdd';
 import AddLinkIcon from '@mui/icons-material/AddLink';
-import MinioStorageService from 'apps/research-ui/src/app/services/storage-service';
+import { environment } from 'apps/research-ui/src/environments/environment';
+import UserService from 'apps/research-ui/src/app/services/user-service';
 
+const http_client = axios.create({
+  baseURL: environment.MINIO_URL,
+});
 export interface StorageProps {
   identifier: string;
 }
@@ -32,26 +36,80 @@ const VisuallyHiddenInput = styled('input')({
   width: 1,
 });
 
+export interface MinioSecurity {
+  accessKeyId: string;
+  secretAccessKey: string;
+  sessionToken: string;
+}
+
 export function Storage(props: StorageProps) {
   const initialFileList: Minio.BucketItem[] = [];
+  const initialMinioSecurity: MinioSecurity = {
+    accessKeyId: '',
+    secretAccessKey: '',
+    sessionToken: '',
+  };
   const [addNote, setAddNote] = useState(false);
   const [bucketFiles, setBucketFiles] = useState(initialFileList);
   const [showProgress, setProgress] = useState('none');
+  const [minioSecurity, setMinioSecurity] = useState(initialMinioSecurity);
   const loadFiles = useRef(true);
+
   useEffect(() => {
     if (loadFiles.current) {
       loadFiles.current = false;
-      MinioStorageService.initStorage();
-      getFileList();
+      initStorage((security: MinioSecurity) => {
+        setMinioSecurity(security);
+        getFileList(security);
+      });
     }
   });
 
+  const getClient = (security: MinioSecurity): Minio.Client => {
+    return new Minio.Client({
+      endPoint: environment.MINIO_HOST,
+      port: 9000,
+      useSSL: false,
+      accessKey: security.accessKeyId,
+      secretKey: security.secretAccessKey,
+      sessionToken: security.sessionToken,
+    });
+  };
+
+  const initStorage = (callback: (security: MinioSecurity) => void) => {
+    http_client
+      .post(
+        `?Action=AssumeRoleWithWebIdentity&Version=2011-06-15&DurationSeconds=86000&WebIdentityToken=${UserService.getToken()}`,
+        {}
+      )
+      .then((response: { data: string }) => {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(response.data, 'text/xml');
+        callback({
+          accessKeyId:
+            xmlDoc
+              .getElementsByTagName('AccessKeyId')[0]
+              .textContent?.toString() ?? '',
+          secretAccessKey:
+            xmlDoc
+              .getElementsByTagName('SecretAccessKey')[0]
+              .textContent?.toString() ?? '',
+          sessionToken:
+            xmlDoc
+              .getElementsByTagName('SessionToken')[0]
+              .textContent?.toString() ?? '',
+        });
+      })
+      .catch((response) => {
+        alert(response);
+      });
+  };
   function handleAddNoteClose(refresh: boolean): void {
     setAddNote(false);
   }
 
   function handleAddNoteSave(name: string, content: string): void {
-    MinioStorageService.getClient().putObject(
+    getClient(minioSecurity).putObject(
       props.identifier,
       `${name.replace(' ', '_')}.txt`,
       content,
@@ -65,7 +123,7 @@ export function Storage(props: StorageProps) {
           alert(err);
         }
         setAddNote(false);
-        getFileList();
+        getFileList(minioSecurity);
       }
     );
   }
@@ -79,7 +137,7 @@ export function Storage(props: StorageProps) {
     setProgress('');
 
     files.map((file) => {
-      MinioStorageService.getClient().presignedPutObject(
+      getClient(minioSecurity).presignedPutObject(
         props.identifier,
         file.name,
         function (err, preSignedUrl) {
@@ -97,7 +155,7 @@ export function Storage(props: StorageProps) {
               },
             })
             .then((response) => {
-              getFileList();
+              getFileList(minioSecurity);
             })
             .catch((error) => {
               alert(error);
@@ -108,13 +166,10 @@ export function Storage(props: StorageProps) {
     setProgress('none');
   }
 
-  function getFileList() {
-    const client=MinioStorageService.getClient();
-    const files =client.listObjectsV2(
-      props.identifier,
-      undefined,
-      false
-    );
+  function getFileList(security: MinioSecurity | undefined) {
+    const client = getClient(security ?? minioSecurity);
+
+    const files = client.listObjectsV2(props.identifier, undefined, false);
     files.on('data', function (obj) {
       const found = bucketFiles.findIndex((r) => r.name === obj.name);
       if (found < 0) {
@@ -131,6 +186,7 @@ export function Storage(props: StorageProps) {
   function handleShowFileMetaData(event: MouseEvent<HTMLButtonElement>): void {
     alert(`We will show details of file selected ${event.currentTarget.id}`);
   }
+
   return (
     <Box>
       <Box>
