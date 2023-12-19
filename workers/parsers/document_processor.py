@@ -11,7 +11,6 @@ from minio.error import S3Error
 from langchain.document_loaders import UnstructuredFileLoader
 from langchain.document_loaders import PyPDFLoader
 
-
 client = Minio("host.docker.internal:9000",
                access_key="lCG73eMigwEyoBjNawyR",
                secret_key="NoH7NNo7IoMg8r7epj7UX1YejaWb6GFZttAfSCBD",
@@ -48,7 +47,7 @@ def download_document(bucket_name: str, file_name: str, file_path_with_name: str
             )
             data = requests.get(pre_signed_url, timeout=5)
             print("writing data to local folder")
-            with open(file_path_with_name, 'wb')as file:
+            with open(file_path_with_name, 'wb') as file:
                 file.write(data.content)
     except S3Error as exc:
         print("error occurred.", exc)

@@ -15,7 +15,7 @@ services:
     ports:
       - 8082:80
 
-  vaultservice:
+  vaultservice: 
     container_name: "vault"
     image: vault
     build:
