@@ -1,6 +1,6 @@
 # AML Research
 
-## What you can do with the VS Code session agent IDE
+## What you can do with the VS Code session agent IDE (development environment)
 
 The repository already includes VS Code tasks and launch configurations that help you:
 
