@@ -1,6 +1,6 @@
 # AML Research
 
-## What you can do with the VS Code session agent IDE (development environment)
+## Working with VS Code (session agent IDE)
 
 The repository already includes VS Code tasks and launch configurations that help you:
 
@@ -11,6 +11,6 @@ The repository already includes VS Code tasks and launch configurations that hel
   - Vault service (`Launch Vault`)
   - Knowledge/graph service (`Launch Graph`)
   - Combined backend services (`Run All`)
-- Use recommended extensions for linting, formatting, and test workflows
+- Use recommended extensions for linting, formatting, and test workflows (see `.vscode/extensions.json`; VS Code will prompt you to install them)
 
 Open the repository in VS Code and use **Run and Debug** plus **Terminal → Run Task** to run these flows quickly.
